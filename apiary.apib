@@ -1,0 +1,655 @@
+FORMAT: 1A
+HOST: https://dashboard.konekt.io
+
+# Konekt
+
+# Available APIs
+We have two public APIs, one that is a *REST API* and one that is a *low-level TCP/IP socket service API*.
+
+## *REST API* Features
+Our REST API provides access to the following features:
+- Device Management
+- Incoming & Outgoing SMS
+- Cloud features
+
+## *TCP/IP Socket Service API* Features 
+Our low-level TCP/IP socket service API is how devices interact with our platform and provides access to the folowing features:
+- Outgoing SMS
+- Cloud features
+
+# Other Documentation Available
+
+We currently have two primary types of documentation:
+- REST API Documentation _(this document)_
+- Cloud User & API Documentation: https://content.konekt.io/docs/konekt-cloud/
+
+# Group Authentication
+Every REST API call is authenticated against either a **supplied user/password**, a **supplied pre-shared apikey**, a **supplied temporary session sesskey**, or a temporary **cookie-based session**. The Authentication group of API calls serves the purpose of establishing/managing sessions and their corresponding sesskey (used in cross-domain settings and special-use scenarios where cookie-based sessions for any reason cannot be used).
+
+Note: An alternative to session-based authentication exists, which requires authentication on every API call. Please contact us if you are in need of this capability for your application.
+
+## Session Creation [/api/1/auth/session]
+### Create a new session using user/password authentication [POST]
+Both **email** and **password** form fields must be supplied with values in the POST body.
+
+Cookie-based session information will be returned upon successful session creation, as well as an object that represents information about the user account and session.
+
+(For cross-domain or other applications that are for any reason unable to utilize the cookie, a temporary `sesskey` string is provided in the returned object that can be supplied as either a GET or POST variable for authorization when calling subsequent API calls.)
+
+Note: Sessions automatically time out after extended periods of inactivity.
+
++ Request (application/x-www-form-urlencoded)
+
+        email=joe@example.com&password=joepassword
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": {
+              "sesskey": "somesessionkeystring",
+              "email": "joe@example.com",
+              "name": "Joe Example",
+              "userid": 42,
+              "partnerid": 12,
+              "role": ""
+            }
+        }
+
+## Session Destruction and Logout [/api/1/auth/sessiondestroy]
+### Destroy a cookie-based session without supplying sesskey [GET]
+
++ Response 200 (application/json)
+
+        {
+            "success": true,
+            "data": null
+        }
+
+### Destroy a session by supplying sesskey [POST]
++ Request (application/x-www-form-urlencoded)
+
+        sesskey=somesessionkeystring
+
++ Response 200 (application/json)
+
+        {
+            "success": true,
+            "data": null
+        }
+
+# Group Users
+
+## User Accounts [/api/1/users/{?email}]
+Our API provides optional user management and authentication for partners that wish to utilize our built-in access control.
+
+### List users [GET]
+All fields supplied in the request are optional and are supported for filtering results.
++ Parameters
+    + email (optional, string, `joe@example.com`)
+        email address filter for searching users list
+
++ Request (application/x-www-form-urlencoded)
+
+        email=joe@example.com
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": [
+            {
+                "id":"42",
+                "email":"joe@example.com",
+                "partnerid":"12",
+                "first":"Joe",
+                "last":"Example",
+                "role":"",
+                "registered":"2014-05-30 20:41:28",
+                "billingmethod":"1"
+            }          
+          ]
+        }
+
+### Create a new user [POST]
+
++ Request (application/x-www-form-urlencoded)
+
+        TBC
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": []
+        }
+
+## Individual User Account Details [/api/1/users/{userid}]
+Either a numerical userid or the keyword `me` must be supplied in the request URI.
++ Parameters
+    + userid (required, number, `42`)
+        id of the user record to retrieve
+        + Values
+            + `me`
+            + `42`
+            
+### Retrieve individual user account information [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": {
+                "id":"42",
+                "email":"joe@example.com",
+                "partnerid":"12",
+                "first":"Joe",
+                "last":"Example",
+                "role":"",
+                "registered":"2014-05-30 20:41:28",
+                "billingmethod":"1"
+            }
+        }
+
+## Individual User Billing and Credit Card Details [/api/1/users/{userid}/billing]
+Either a numerical userid or the keyword `me` must be supplied in the request URI.
++ Parameters
+    + userid (required, number, `42`)
+        id of the user whose billing details to retrieve
+        + Values
+            + `me`
+            + `42`
+            
+### Retrieve individual user billing information [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": {
+            "id":"42",
+            "billingmethod":"1",
+            "cardset":true,
+            "card":{
+                    "last4":"9876",
+                    "issuer":"MasterCard",
+                    "expirationmonth":1,
+                    "expirationyear":2018,
+                    "country":"United States of America",
+                    "name":"Joe Example",
+                    "address1":"1 Beverly Way",
+                    "address2":"","city":"Beverly Hills",
+                    "state":"CA",
+                    "zip":"90210",
+                    "cvccheck":"pass",
+                    "addresscheck":"fail",
+                    "zipcheck":"pass"
+                }
+            }
+        }
+
+### Update individual user billing information [POST]
++ Request (application/x-www-form-urlencoded)
+
+        TBC
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": {}
+        }
+
+## Individual User Billing Recent Charges [/api/1/users/{userid}/charges]
+Either a numerical userid or the keyword `me` must be supplied in the request URI.
+
++ Parameters
+    + userid (required, number, `42`)
+        id of the user whose recent charges to retrieve
+        + Values
+            + `me`
+            + `42`
+
+### Retrieve individual user billing recent charges [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": {
+                "id":"43",
+                "billingmethod":"1",
+                "charges":[
+                    {
+                        "date":"2015-01-22",
+                        "amount":5,
+                        "description":"Charge for Order 91",
+                        "succeeded":true,
+                        "message":"",
+                        "refunded":false,
+                        "refund":0,
+                        "type":"MasterCard",
+                        "last4":"9876"
+                    },
+                    {
+                        "date":"2015-01-22",
+                        "amount":5,
+                        "description":"Charge for Order 89",
+                        "succeeded":false,
+                        "message":"Your card was declined.",
+                        "refunded":false,
+                        "refund":0,"type":"MasterCard",
+                        "last4":"9876"
+                    },
+                    {
+                        "date":"2014-08-21",
+                        "amount":8,
+                        "description":"Charge for Order 32",
+                        "succeeded":true,
+                        "message":"",
+                        "refunded":true,
+                        "refund":8,
+                        "type":"MasterCard",
+                        "last4":"9876"
+                    }
+                ]
+            }
+        }
+
+## Individual User Recent API Activity [/api/1/users/{userid}/activity]
+Either a numerical userid or the keyword `me` must be supplied in the request URI.
++ Parameters
+    + userid (required, number, `42`)
+        id of the user whose recent charges to retrieve
+        + Values
+            + `me`
+            + `42`
+
+### Retrieve individual user recent API activity [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": {
+            "id":42,
+            "events":[
+                {
+                    "eventid":"20253",
+                    "timestamp":"2015-02-04 01:17:23",
+                    "description":"1\/users\/me\/activity",
+                    "method":"GET",
+                    "sent":""
+                },
+                {
+                    "eventid":"20252",
+                    "timestamp":"2015-02-04 01:10:05",
+                    "description":"1\/users\/me\/charges",
+                    "method":"GET",
+                    "sent":""
+                },
+                {
+                    "eventid":"20251",
+                    "timestamp":"2015-02-04 01:07:05",
+                    "description":"1\/users\/me\/billing",
+                    "method":"POST",
+                    "sent":"MASKED"
+                }
+            ]
+        }
+
+# Group Device Data Plans
+
+## Device Data Plans [/api/1/plans/]
+
+### List plans [GET]
+All fields supplied in the request are optional and are supported for filtering results.
+
++ Request (application/x-www-form-urlencoded)
+
+        TBC
+
++ Response 200 (application/json)
+
+        {
+            "success":true,
+            "data":[
+                {
+                    "id":73,
+                    "partnerid":12,
+                    "name":"1MB",
+                    "description":"1 MB of data per month",
+                    "data":1000000,
+                    "recurring":1,
+                    "enabled":1,
+                    "amount1":3,
+                    "amount2":4,
+                    "amount3":5,
+                    "amount4":6,
+                    "amount5":7,
+                    "billingperiod":1,
+                    "overage1":0.1,
+                    "overage2":0.2,
+                    "overage3":0.3,
+                    "overage4":0.4,
+                    "overage5":0.5,
+                    "sms1":0.2,
+                    "sms2":0.3,
+                    "sms3":0.4,
+                    "sms4":0.5,
+                    "sms5":0.65,
+                    "trialdays":30,
+                    "templateid":13
+                }
+            ]
+        }
+
+## Individual Device Data Plan Details [/api/1/devices/{planid}]
+A numerical plan ID must be supplied in the request URI.
++ Parameters
+    + planid (required, number, `73`)
+        id of the device data plan whose details to retrieve
+
+### Retrieve individual device data plan details [GET]
+
++ Response 200 (application/json)
+
+        {
+            "success":true,
+            "data": {
+                "id":73,
+                "partnerid":12,
+                "name":"1MB",
+                "description":"1 MB of data per month",
+                "data":1000000,
+                "recurring":1,
+                "enabled":1,
+                "amount1":3,
+                "amount2":4,
+                "amount3":5,
+                "amount4":6,
+                "amount5":7,
+                "billingperiod":1,
+                "overage1":0.1,
+                "overage2":0.2,
+                "overage3":0.3,
+                "overage4":0.4,
+                "overage5":0.5,
+                "sms1":0.2,
+                "sms2":0.3,
+                "sms3":0.4,
+                "sms4":0.5,
+                "sms5":0.65,
+                "trialdays":30,
+                "templateid":13
+            }
+        }
+
+
+# Group Devices
+
+## Devices [/api/1/devices/{?userid|sim|phone|name}]
+
+### List devices [GET]
+All fields supplied in the request are optional and are supported for filtering results.
++ Parameters
+    + userid (optional, number, `42` )
+        id of the user whose devices' information to retrieve (the `me` keyword is not supported)
+        (Note that for normal users, they will only see their devices by default and can leave this off)
+    + sim (optional, number, `99999900000000123` )
+        Only show device that has attached SIM with given number
+    + phone (optional, string, `+17735550101` )
+        Only show device that has the given phone number assigned to it
+    + name (optional, string, `Test Device` )
+        Filter devices based on name
+
+
+
++ Response 200 (application/json)
+
+        {
+            "success": true,
+            "data": [
+            {
+                "id": 156,
+                "userid": 458,
+                "name": "Unnamed Device (25888)",
+                "whencreated": "2015-06-10 00:15:54",
+                "phonenumber": "",
+                "tags": [],
+                "links": {
+                    "cellular": [
+                        {
+                            "id": 1234,
+                            "sim": "99990000000012345678",
+                            "imsi": 000000001234567,
+                            "carrierid": 2,
+                            "dataplansubscriptionid": 75,
+                            "databonusplansubscriptionid": 0,
+                            "tier": 1,
+                            "whenclaimed": "2015-06-10 00:15:54",
+                            "whenexpires": "2015-07-10 00:15:54",
+                            "cur_billing_data_used": "1187150",
+                            "apn": "apn.konekt.io (no user, no pw)",
+                            "state": "LIVE",
+                            "overagelimit": -1
+                        }
+                    ]
+                }
+            }
+            ]
+        }
+
+## Individual Device Details [/api/1/devices/{deviceid}]
+A numerical device ID must be supplied in the request URI.
++ Parameters
+    + deviceid (required, number, `1234`)
+        id of the device whose details to retrieve
+
+### Retrieve individual device information [GET]
+
++ Response 200 (application/json)
+
+        {
+            "success": true,
+            "data": {
+                "id": 156,
+                "userid": 458,
+                "name": "Unnamed Device (25888)",
+                "whencreated": "2015-06-10 00:15:54",
+                "phonenumber": "",
+                "tags": [],
+                "links": {
+                    "cellular": [
+                        {
+                            "id": 1234,
+                            "sim": "99990000000012345678",
+                            "imsi": 000000001234567,
+                            "carrierid": 2,
+                            "dataplansubscriptionid": 75,
+                            "databonusplansubscriptionid": 0,
+                            "tier": 1,
+                            "whenclaimed": "2015-06-10 00:15:54",
+                            "whenexpires": "2015-07-10 00:15:54",
+                            "cur_billing_data_used": "1187150",
+                            "apn": "apn.konekt.io (no user, no pw)",
+                            "state": "LIVE",
+                            "overagelimit": -1
+                        }
+                    ]
+                }
+            }
+        }
+
+
+## Device Claiming and Activation [/api/1/links/cellular/sim_{simnumber}/claim]
+A numerical SIM number (located on the physical SIM card) must be supplied in the request URI.
++ Parameters
+    + simnumber (required, number, `99990000000012345678`)
+        number located on the SIM card that specifies the SIM card to activate
+
+### Claim ownership of and activate an individual device [POST]
+Note: This action cannot be completed without first having valid billing information on file for the device owner.
+
+Both **plan** and **tier** form fields must be supplied with values in the POST body. The value supplied for the plan field should be a planid (see: Device Data Plans).  The value for the tier field should be in the range from between 1 and 5 (inclusive), and represents which geographic regions (Tiers 1 through 5, respectively) within which the device will be allowed to be used. Higher tier values incur higher costs.
+
++ Request (application/x-www-form-urlencoded)
+
+        plan=73&tier=1
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": {
+            "id": 1234,
+            "sim": "99990000000012345678"
+          }
+        }
+
+## Device Phone Numbers [/api/1/devices/{deviceid}/addnumber?{preview}]
+A numerical device ID must be supplied in the request URI.
++ Parameters
+    + deviceid (required, number, `1234`)
+        id of the device whose phone number to view or modify
+    + preview (optional, number, `1`)
+        if set to `1` and supplied, will return cost (if any) of performing the operation WITHOUT actually performing i
+
+### Purchase and Assign Phone Number to Device [POST]
+Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
+
+The following form fields are required in the POST body: 
+- **country** (string, required, two-letter country code for the phone number)
+
+The following form fields are optional in the POST body and are only applicable to phone numbers in the US/Canada: 
+- **areacode** (number, optional, area code to search in for phone number)
+
++ Request (application/x-www-form-urlencoded)
+
+        country=US&areacode=703
+
++ Response 200 (application/json)
+
+        {
+                "success": true,
+                "data": "+17035551212",
+                "order_data": {
+                    "preview": false,
+                    "id": "NUM",
+                    "unit_cost": "1.00",
+                    "description": "Phone number activation (US)",
+                    "extra_description": "device:Unnamed Device (52115), number:+15054659202",
+                    "needs_shipping": false
+                }
+        }
+    
+## Device Ordering [/api/1/orders/]
+
+### Place a Device Order [POST]
+Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
+
+The following form fields are required in the POST body: 
+- **quantity** (number, required, quantity of SIMs being ordered, must be greater than 0)
+- **line1** (string, required, shipping address line number 1)
+- **city** (string, required, shipping city)
+- **country** (string, required, shipping country)
+
+The following form fields are optional in the POST body: 
+- **state** (string, optional, shipping address state)
+- **zip** (string, required, shipping zip code or postal code)
+- **line2** (string, optional, shipping address line number 2)
+- **telephone** (string, optional, shipping recipient telephone number)
+- **notes** (string, optional, shipping notes)
+
+On success, the response includes the following fields: 
+- **id** (number, device order number)
+- **whenplaced** (string, device order timestamp)
+
++ Request (application/x-www-form-urlencoded)
+
+        quantity=1&line1=123%20Prosperity%20Way&city=Beverly%20Hills&state=CA&country=USA&zip=90210
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": {
+            "id": 1234,
+            "whenplaced": "2015-01-28 15:27:33"
+          }
+        }
+
+# Group SMS
+
+## Incoming SMS to Device [/api/1/sms/incoming]
+Device-terminated SMS (DT SMS), also known as mobile-terminated SMS (MT SMS), refers to Short Messaging Service messages sent to devices.
+
+### Send an SMS to a Device [POST]
+Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
+
+Circuit-switched DT SMS is only possible with cellular devices. Currently, only circuit-switched SMS is supported for DT SMS (DT SMS-over-IP is planned for support in the future).
+
+Note: All telephone numbers are specified using E.164 formatting.
+
+One of the following form fields are required in the POST body to identify the recipient device (only one of the following fields may be supplied): 
+- **deviceid** (number, required, id of the recipient device)
+- **phonenumber** (string, required, phone number of the recipient device if the device has already been assigned a phone number)
+- **deviceids** (array of deviceid entries, used for sending SMS to multiple devices simultaneously)
+
+One of the following form fields are required in the POST body to provide the contents of the message (only one of these fields may be included): 
+- **body** (string, required, ASCII text representation of the SMS body)
+- **base64body** (string, required, a base64-encoded representation of the SMS body)
+
++ Request (application/x-www-form-urlencoded)
+
+        deviceid=1234&body=Hello%20World!
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": null
+        }
+
++ Request (application/x-www-form-urlencoded)
+
+        deviceids[]=1234&deviceids[]=1235&deviceids[]=1236&body=Hello%20World!
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": null
+        }
+
+## Outgoing SMS to Mobile Phone Number [/api/1/sms/outgoing]
+Our platform enables outgoing SMS from either a device or from a web application.
+
+For applications involving devices: Device-originated SMS (DO SMS), also known as mobile-originated SMS (MO SMS), refers to Short Messaging Service messages sent from devices to mobile telephone numbers anywhere in the world. We support DO SMS via our REST API (as described in this section), as well as SMS-over-IP via a low-level TCP/IP socket interface.
+
+Note: All telephone numbers are specified using E.164 formatting.
+
+### Send an SMS to a Mobile Telephone Number [POST]
+Note: This action cannot be completed without first having valid billing information on file for the authenticated user account AND having purchased and assigned a phone number to a device.
+
+One of the following form fields are required in the POST body to identify the source device (only one of the following fields may be supplied): 
+- **deviceid** (number, required, id of the source device)
+- **phonenumber** (string, required, phone number of the source device if the device has already been assigned a phone number)
+
+The following form fields are required in the POST body to identify the destination device (only one of the following fields may be supplied): 
+- **destinationphonenumber** (string, required, phone number of the recipient device)
+
+One of the following form fields are required in the POST body to provide the contents of the message (only one of these fields may be included): 
+- **body** (string, required, ASCII text representation of the SMS body)
+- **base64body** (string, required, a base64-encoded representation of the SMS body)
+
++ Request (application/x-www-form-urlencoded)
+
+        deviceid=1234&destinationphonenumber=%2B15555551212body=Hello%20World!
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": null
+        }
