@@ -663,7 +663,7 @@ The following form fields are required in the POST body:
 - **optionid** (number, required if productid has options, must be greater than 0)
 
 The following form fields are optional in the POST body: 
-- **shipping* (string, optional, shipping city)
+- **shipping** (string, optional, shipping city)
 - **name** (string, optional, recipient name)
 - **line1** (string, optional, line 1 of shipping address)
 - **city** (string, optional)
@@ -687,6 +687,8 @@ On success, the response includes the following fields:
 - **free_shipping** (bool, true if shipping is free)
 - **shipping_cost** (number, shipping cost)
 - **sales_tax** (number, sales tax applied)
+
+Note: You can also choose to do this POST request with preview mode by appending ?preview=1 to the end of the url. This will not result in an actual order, which can be helpful if you're getting accustomed to the API and testing out your application.
 
 + Request (application/json)
 
