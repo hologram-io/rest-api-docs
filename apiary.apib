@@ -928,7 +928,7 @@ On success, the response includes the following fields:
       ]
     }
 
-## Retrieving CSR Real-time Data Monitor [/api/1/csr/rdm/{id}]
+## Individual CSR Real-time Data Monitor [/api/1/csr/rdm/{id}]
 
 + Parameters
     + id (required, number, `4`)
@@ -1025,7 +1025,7 @@ On success, the response includes the following fields:
       ]
     }
 
-## Retrieving single CSR App by id [/api/1/csr/apps/{id}]
+## Retrieving Single CSR App by id [/api/1/csr/apps/{id}]
 
 + Parameters
   + id (required, number, `1`)
@@ -1205,20 +1205,22 @@ On success, the response includes the following fields:
       ]
     }
 
-### Retrieve single CSR Rule by id [GET]
+## Retrieving CSR Rules by id [/api/1/rules/{id}]
+
+### Retrieve Single CSR Rule by id [GET]
 
 + Parameters
   + id (required, number, `5`)
       Will only return the result that matches the rule id if it is supplied.
 
 
-### Delete single CSR Rule by id [DELETE]
-### Delete CSR Rules [/api/1/rules/{id}]
-
+## Delete CSR Rules [/api/1/rules/{id}]
 
 + Parameters
     + id (required, number, `4`)
         Will only return the result that matches the rule id if it is supplied.
+
+### Delete single CSR Rule by id [DELETE]
 
 + Response 200 (application/json)
 
@@ -1226,6 +1228,20 @@ On success, the response includes the following fields:
         "success":true
     }
 
-### Create Rule [POST]
+## Creating CSR Rule [/api/1/rules/{id}]
 
-### Update Rule [PUT]
++ Parameters
+    + id (required, number, `4`)
+        Will only return the result that matches the rule id if it is supplied.
+
+### Create CSR Rule [POST]
+
+
+## Updating CSR Rule [/api/1/rules/{id}]
+
++ Parameters
+    + id (required, number, `4`)
+        Will only return the result that matches the rule id if it is supplied.
+        
+### Update CSR Rule [PUT]
+
