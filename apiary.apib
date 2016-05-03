@@ -935,3 +935,255 @@ On success, the response includes the following fields:
         }
       ]
     }
+
+### Create Device Data [POST]
+
+
+
+
+## CSR Tags [/api/1/csr/tags]
+
+### List CSR Tags [GET]
+
++ Response 200 (application/json)
+    {
+      "success": true,
+      "data": [
+        "Tag100",
+        "Tag200",
+        "Tag2001",
+        "Test1",
+        "Test2",
+        "TestA",
+        "TestB",
+        "TestD",
+        "TestE",
+        "TestXYZ"
+      ]
+    }
+
+## CSR Apps [/api/1/csr/apps]
+
+### List CSR Apps [GET]
+
++ Response 200 (application/json)
+
+    {
+      "success": true,
+      "data": [
+        {
+          "id": 1,
+          "partnerid": 0,
+          "name": "Email",
+          "description": "Send an email containing the CSR JSON object",
+          "userpropertieslist": [
+            {
+              "property": "recipients",
+              "name": "Email recipients",
+              "description": "Comma-separated list of email addresses",
+              "mandatory": true
+            },
+            {
+              "property": "subject",
+              "name": "Subject",
+              "description": "Email subject",
+              "mandatory": true
+            }
+          ]
+        }
+      ]
+    }
+
+
+### Retrieve single CSR App by id [GET]
+
++ Parameters
+  + id (required, number, `1`)
+    Will only return the result that matches the app id if it is supplied. 
+
++ Response 200 (application/json)
+
+  {
+    "success": true,
+    "data": {
+      "id": 1,
+      "partnerid": 0,
+      "name": "Email",
+      "description": "Send an email containing the CSR JSON object",
+      "userpropertieslist": [
+        {
+          "property": "recipients",
+          "name": "Email recipients",
+          "description": "Comma-separated list of email addresses",
+          "mandatory": true
+        },
+        {
+          "property": "subject",
+          "name": "Subject",
+          "description": "Email subject",
+          "mandatory": true
+        }
+      ]
+    }
+  }
+
+
+## CSR Sources [/api/1/sources/]
+
+
+### List CSR Sources [GET]
+
++ Response 200 (application/json)
+
+    {
+      "success": true,
+      "data": [
+        {
+          "id": 12,
+          "userid": 395,
+          "deviceid": 46,
+          "sharedkey": 945112124,
+          "sharedid": 1631022658
+        },
+        {
+          "id": 11,
+          "userid": 395,
+          "deviceid": 46,
+          "sharedkey": 1266043705,
+          "sharedid": 1464682875
+        },
+        {
+          "id": 10,
+          "userid": 395,
+          "deviceid": 46,
+          "sharedkey": 1265136212,
+          "sharedid": 776547393
+        },
+        {
+          "id": 9,
+          "userid": 426,
+          "deviceid": 17,
+          "sharedkey": 2104503649,
+          "sharedid": 1212305729
+        },
+        {
+          "id": 8,
+          "userid": 426,
+          "deviceid": 17,
+          "sharedkey": 1700100216,
+          "sharedid": 1968459342
+        },
+        {
+          "id": 7,
+          "userid": 426,
+          "deviceid": 17,
+          "sharedkey": 1852076144,
+          "sharedid": 2002276946
+        },
+        {
+          "id": 6,
+          "userid": 426,
+          "deviceid": 17,
+          "sharedkey": 779255165,
+          "sharedid": 557926986
+        },
+        {
+          "id": 5,
+          "userid": 426,
+          "deviceid": 17,
+          "sharedkey": 1363174757,
+          "sharedid": 558911568
+        },
+        {
+          "id": 4,
+          "userid": 426,
+          "deviceid": 17,
+          "sharedkey": 1064000090,
+          "sharedid": 1143682871
+        },
+        {
+          "id": 3,
+          "userid": 426,
+          "deviceid": 17,
+          "sharedkey": 728448317,
+          "sharedid": 1984392300
+        },
+        {
+          "id": 2,
+          "userid": 426,
+          "deviceid": 2,
+          "sharedkey": 1465801049,
+          "sharedid": 1397579101
+        }
+      ]
+    }
+
+
+### Retrieve single CSR Source by id [/api/1/sources/{id}]
++ id (required, number, `12`)
+    Will only return the result that matches the rule id if it is supplied.
+
+    {
+      "success": true,
+      "data": {
+        "id": 12,
+        "userid": 395,
+        "deviceid": 46,
+        "sharedkey": 945112124,
+        "sharedid": 1631022658
+      }
+    }
+
+## CSR Rules [/api/1/rules/]
+
+
+### List CSR Rules [GET]
+
++ Response 200 (application/json)
+
+    {
+      "success": true,
+      "data": [
+        {
+          "id": 5,
+          "userid": 426,
+          "partnerid": 1,
+          "enabled": 1,
+          "csrappid": 1,
+          "userproperties": "{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
+          "hidden": 0,
+          "tags": [
+            "TestB",
+            "Test2"
+          ]
+        },
+        {
+          "id": 4,
+          "userid": 426,
+          "partnerid": 1,
+          "enabled": 1,
+          "csrappid": 1,
+          "userproperties": "{\"recipients\":\"asdf@gmail.com\",\"subject\":\"asdf\"}",
+          "hidden": 0,
+          "tags": [
+            "Tag100",
+            "Tag2001"
+          ]
+        }
+      ]
+    }
+
+### Retrieve single CSR Rule by id [GET]
+
++ Parameters
+  + id (required, number, `5`)
+      Will only return the result that matches the rule id if it is supplied.
+
+
+### Delete CSR Rules [DELETE]
+
+Coming soon!
+
+### Create Rule [POST]
+
+### Update Rule [PUT]
