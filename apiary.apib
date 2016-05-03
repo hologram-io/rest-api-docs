@@ -928,7 +928,7 @@ On success, the response includes the following fields:
       ]
     }
 
-## Individual CSR Real-time Data Monitor [/api/1/csr/rdm/{id}]
+## Single CSR Real-time Data Monitor [/api/1/csr/rdm/{id}]
 
 + Parameters
     + id (required, number, `4`)
@@ -1025,7 +1025,7 @@ On success, the response includes the following fields:
       ]
     }
 
-## Retrieving Single CSR App by id [/api/1/csr/apps/{id}]
+## Retrieving CSR App by id [/api/1/csr/apps/{id}]
 
 + Parameters
   + id (required, number, `1`)
@@ -1207,16 +1207,16 @@ On success, the response includes the following fields:
       ]
     }
 
-## Retrieving CSR Rules by id [/api/1/rules/{id}]
+## Retrieving CSR Rule by id [/api/1/rules/{id}]
 
-### Retrieve Single CSR Rule [GET]
+### Retrieve CSR Rule [GET]
 
 + Parameters
   + id (required, number, `5`)
       Will only return the result that matches the rule id if it is supplied.
 
 
-### Delete single CSR Rule by id [DELETE]
+### Delete CSR Rule [DELETE]
 
 + Response 200 (application/json)
 
@@ -1225,22 +1225,6 @@ On success, the response includes the following fields:
     }
 
 ## Creating CSR Rule [/api/1/rules/]
-
-The following form fields are required in the POST body:
-- **csrappid** (number, required, must be greater than 0)
-- **userproperties** (string, )
-- **tags** (string, required, tags for the new CSR rule)
-
-On success, the response includes the following fields:
-- **data** (object, data associated with the updated CSR rule)
-- **id** (number, CSR rule id)
-- **userid** (number, user's id)
-- **partnerid** (number, partner id)
-- **enabled** (bool, true if CSR rule is enabled)
-- **csrappid** (number, the CSR App id)
-- **userproperties** (string, the user properties string that was returned)
-- **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, tags associated with the CSR rule)
 
 ### Create CSR Rule [POST]
 
@@ -1274,6 +1258,23 @@ On success, the response includes the following fields:
   }
 }
 
+
+
+The following form fields are required in the POST body:
+- **csrappid** (number, required, must be greater than 0)
+- **userproperties** (string, )
+- **tags** (string, required, tags for the new CSR rule)
+
+On success, the response includes the following fields:
+- **data** (object, data associated with the updated CSR rule)
+- **id** (number, CSR rule id)
+- **userid** (number, user's id)
+- **partnerid** (number, partner id)
+- **enabled** (bool, true if CSR rule is enabled)
+- **csrappid** (number, the CSR App id)
+- **userproperties** (string, the user properties string that was returned)
+- **hidden** (bool, true if it is hidden)
+- **tags** (list of strings, tags associated with the CSR rule)
 
 
 ## Updating CSR Rule [/api/1/rules/{id}]
