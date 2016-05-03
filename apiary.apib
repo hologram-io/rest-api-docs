@@ -40,21 +40,23 @@ Note: Sessions automatically time out after extended periods of inactivity.
 
 + Request (application/x-www-form-urlencoded)
 
-        email=joe@example.com&password=joepassword
+    email=someone@example.com&password=joepassword
 
 + Response 200 (application/json)
 
-        {
-          "success": true,
-          "data": {
-              "sesskey": "somesessionkeystring",
-              "email": "joe@example.com",
-              "name": "Joe Example",
-              "userid": 42,
-              "partnerid": 12,
-              "role": ""
-            }
-        }
+    {
+      "success": true,
+      "data": {
+        "sesskey": "somesessionkeystring",
+        "userid": 123,
+        "email": "someone@example.com",
+        "first": "someFirstName",
+        "last": "someLastName",
+        "role": "somerole",
+        "has_password": 1,
+        "partnerid": 1
+      }
+    }
 
 ## Session Destruction and Logout [/api/1/auth/sessiondestroy]
 ### Destroy a cookie-based session without supplying sesskey [GET]
