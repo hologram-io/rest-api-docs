@@ -12,7 +12,7 @@ Our REST API provides access to the following features:
 - Incoming & Outgoing SMS
 - Cloud features
 
-## *TCP/IP Socket Service API* Features 
+## *TCP/IP Socket Service API* Features
 Our low-level TCP/IP socket service API is how devices interact with our platform and provides access to the folowing features:
 - Outgoing SMS
 - Cloud features
@@ -109,7 +109,7 @@ All fields supplied in the request are optional and are supported for filtering 
                 "role":"",
                 "registered":"2014-05-30 20:41:28",
                 "billingmethod":"1"
-            }          
+            }
           ]
         }
 
@@ -134,7 +134,7 @@ Either a numerical userid or the keyword `me` must be supplied in the request UR
         + Values
             + `me`
             + `42`
-            
+
 ### Retrieve individual user account information [GET]
 
 + Response 200 (application/json)
@@ -161,7 +161,7 @@ Either a numerical userid or the keyword `me` must be supplied in the request UR
         + Values
             + `me`
             + `42`
-            
+
 ### Retrieve individual user billing information [GET]
 
 + Response 200 (application/json)
@@ -630,10 +630,10 @@ A numerical device ID must be supplied in the request URI.
 ### Purchase and Assign Phone Number to Device [POST]
 Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
 
-The following form fields are required in the POST body: 
+The following form fields are required in the POST body:
 - **country** (string, required, two-letter country code for the phone number)
 
-The following form fields are optional in the POST body and are only applicable to phone numbers in the US/Canada: 
+The following form fields are optional in the POST body and are only applicable to phone numbers in the US/Canada:
 - **areacode** (number, optional, area code to search in for phone number)
 
 On success, the response includes the following fields:
@@ -669,7 +669,7 @@ On success, the response includes the following fields:
        "sales_tax": 0
      }
    }
-    
+
 ## Device Ordering [/api/1/orders/]
 
 ### Place a Device Order [POST]
@@ -679,11 +679,11 @@ Note: This action cannot be completed without first having valid billing informa
     + preview (optional, number, `1`)
         if set to `1` and supplied, will return cost (if any) of performing the operation WITHOUT actually performing it. This will not result in an actual order, which can be helpful if you're getting accustomed to the API and testing out your application.
 
-The following form fields are required in the POST body: 
+The following form fields are required in the POST body:
 - **productid** (number, required, must be greater than 0)
 - **optionid** (number, required if productid has options, must be greater than 0)
 
-The following form fields are optional in the POST body: 
+The following form fields are optional in the POST body:
 - **shipping** (object, optional, contains the recipient name, address etc. for the particular order)
 - **name** (string, optional, recipient name)
 - **line1** (string, optional, line 1 of shipping address)
@@ -693,7 +693,7 @@ The following form fields are optional in the POST body:
 - **zip** (number, optional)
 - **telephone** (number, optional)
 
-On success, the response includes the following fields: 
+On success, the response includes the following fields:
 - **order_data** (object, order data)
 - **preview** (bool, if API call is in preview mode)
 - **sku** (string, the sku of the product)
@@ -723,11 +723,11 @@ On success, the response includes the following fields:
             "zip" : "60654",
             "telephone" : "1234567890"
         }
- 
+
     }
 
 + Response 200 (application/json)
-    
+
     {
       "success": true,
       "data": null,
@@ -760,12 +760,12 @@ Circuit-switched DT SMS is only possible with cellular devices. Currently, only 
 
 Note: All telephone numbers are specified using E.164 formatting.
 
-One of the following form fields are required in the POST body to identify the recipient device (only one of the following fields may be supplied): 
+One of the following form fields are required in the POST body to identify the recipient device (only one of the following fields may be supplied):
 - **deviceid** (number, required, id of the recipient device)
 - **phonenumber** (string, required, phone number of the recipient device if the device has already been assigned a phone number)
 - **deviceids** (array of deviceid entries, used for sending SMS to multiple devices simultaneously)
 
-One of the following form fields are required in the POST body to provide the contents of the message (only one of these fields may be included): 
+One of the following form fields are required in the POST body to provide the contents of the message (only one of these fields may be included):
 - **body** (string, required, ASCII text representation of the SMS body)
 - **base64body** (string, required, a base64-encoded representation of the SMS body)
 
@@ -801,14 +801,14 @@ Note: All telephone numbers are specified using E.164 formatting.
 ### Send an SMS to a Mobile Telephone Number [POST]
 Note: This action cannot be completed without first having valid billing information on file for the authenticated user account AND having purchased and assigned a phone number to a device.
 
-One of the following form fields are required in the POST body to identify the source device (only one of the following fields may be supplied): 
+One of the following form fields are required in the POST body to identify the source device (only one of the following fields may be supplied):
 - **deviceid** (number, required, id of the source device)
 - **phonenumber** (string, required, phone number of the source device if the device has already been assigned a phone number)
 
-The following form fields are required in the POST body to identify the destination device (only one of the following fields may be supplied): 
+The following form fields are required in the POST body to identify the destination device (only one of the following fields may be supplied):
 - **destinationphonenumber** (string, required, phone number of the recipient device)
 
-One of the following form fields are required in the POST body to provide the contents of the message (only one of these fields may be included): 
+One of the following form fields are required in the POST body to provide the contents of the message (only one of these fields may be included):
 - **body** (string, required, ASCII text representation of the SMS body)
 - **base64body** (string, required, a base64-encoded representation of the SMS body)
 
@@ -825,25 +825,18 @@ One of the following form fields are required in the POST body to provide the co
 
 # Group Cloud Services Router
 
-## CSR RDM [/api/1/csr/rdm/{recordid}]
-
-+ Parameters
-    + recordid (optional, number, `13`)
-        Will only return the result that matches the record id if it is supplied. 
-
-### Retrieve RDM [GET]
-
-The following form fields are optional in the POST body: 
+## CSR Real-time Data Monitor (RDM) [/api/1/csr/rdm/{recordid}]
 
 
-On success, the response includes the following fields: 
+### List RDM [GET]
+
+On success, the response includes the following fields:
 - **data** (list of objects, data)
-- **id** (number, rdm id) 
+- **id** (number, rdm id)
 - **logged** (string, the date at which it was logged)
 - **deviceid** (number, device id)
 - **data** (string, data stored)
 - **tags** (list of tags, list of tags associated with the rdm)
-
 
 + Response 200 (application/json)
 
@@ -936,9 +929,42 @@ On success, the response includes the following fields:
       ]
     }
 
-### Create Device Data [POST]
+### Retrieve RDM by id [GET]
+
++ Parameters
+    + id (required, number, `4`)
+        Will only return the result that matches the record id if it is supplied.
 
 
++ Response 200 (application/json)
+
+    {
+        "success": true,
+            "data": {
+                "id": 4,
+                "logged": "2015-03-19 18:08:45",
+                "deviceid": 1,
+                "data": "{\"source\":\"asdf\",\"tags\":[],\"data\":\"VGVzdGluZw==\"}",
+                "record_id": "8e274336-cf84-11e5-a67e-bc764e20b516",
+                "tags": []
+            }
+    }
+
+### Create RDM [POST]
+
+
+The following form fields are required in the POST body:
+- **deviceid** (number, required, the device id)
+- **data** (string, required, data that is going to be stored)
+
++ Request (application/x-www-form-urlencoded)
+
+        deviceid=77
+
++ Response 200 (application/json)
+    {
+        "success" : true
+    }
 
 
 ## CSR Tags [/api/1/csr/tags]
@@ -999,7 +1025,7 @@ On success, the response includes the following fields:
 
 + Parameters
   + id (required, number, `1`)
-    Will only return the result that matches the app id if it is supplied. 
+    Will only return the result that matches the app id if it is supplied.
 
 + Response 200 (application/json)
 
@@ -1180,9 +1206,19 @@ On success, the response includes the following fields:
       Will only return the result that matches the rule id if it is supplied.
 
 
-### Delete CSR Rules [DELETE]
+### Delete single CSR Rule by id [DELETE]
+### Delete CSR Rules [/api/1/rules/{id}]
 
-Coming soon!
+
++ Parameters
+    + id (required, number, `4`)
+        Will only return the result that matches the rule id if it is supplied.
+
++ Response 200 (application/json)
+
+    {
+        "success":true
+    }
 
 ### Create Rule [POST]
 
