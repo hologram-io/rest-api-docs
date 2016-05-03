@@ -1650,3 +1650,59 @@ On success, the response includes the following fields:
     }
   ]
 }
+
+# Group Links
+
+## Cellular Links [/api/1/links/cellular]
+
+### Retrieve Cellular Links [GET]
+
+On success, the response includes the following fields:
+- **id** (number, cellular link id)
+- **deviceid** (number, device id)
+- **devicename** (string, name of the device)
+- **userid** (number, user's id)
+- **partnerid** (number, partner id)
+- **sim** (string, SIM card number)
+- **msisdn** (string)
+- **imsi** (string, imsi)
+- **dataplansubscriptionid** (number, data plan subscription id)
+- **tier** (number, tier)
+- **carrier** (number, carrier id)
+- **state** (string, device state)
+- **whenclaimed** (string, when was the SIM number claimed)
+- **whenexpires** (string)
+- **whencreated** (string)
+- **overagelimit** (number)
+- **priv_ip_address** (string, private IP address)
+- **apn** (string)
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": [
+    {
+      "id": 37,
+      "deviceid": 0,
+      "devicename": null,
+      "userid": null,
+      "partnerid": 0,
+      "sim": "99900001",
+      "msisdn": "1111111",
+      "imsi": 1000001,
+      "dataplansubscriptionid": 0,
+      "tier": 0,
+      "carrier": 1,
+      "state": "LIVE",
+      "whenclaimed": "0000-00-00 00:00:00",
+      "whenexpires": "0000-00-00 00:00:00",
+      "whencreated": "2016-05-02 14:59:53",
+      "overagelimit": -1,
+      "priv_ip_address": "0.0.0.0",
+      "apn": "test"
+    }
+  ]
+}
+
+
