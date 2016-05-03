@@ -1218,6 +1218,10 @@ On success, the response includes the following fields:
 
 ### Delete CSR Rule [DELETE]
 
++ Parameters
+  + id (required, number, `5`)
+      Will only return the result that matches the rule id if it is supplied.
+      
 + Response 200 (application/json)
 
     {
@@ -1262,7 +1266,7 @@ On success, the response includes the following fields:
 
 The following form fields are required in the POST body:
 - **csrappid** (number, required, must be greater than 0)
-- **userproperties** (string, )
+- **userproperties** (string, user properties)
 - **tags** (string, required, tags for the new CSR rule)
 
 On success, the response includes the following fields:
