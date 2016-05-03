@@ -928,7 +928,7 @@ On success, the response includes the following fields:
       ]
     }
 
-## Retrieving CSR Real-time Data Monitor (RDM) [/api/1/csr/rdm/{id}]
+## [/api/1/csr/rdm/{id}]
 
 + Parameters
     + id (required, number, `4`)
@@ -970,6 +970,9 @@ The following form fields are required in the POST body:
 
 
 ## CSR Tags [/api/1/csr/tags]
+
+On success, the response includes the following fields:
+- **data** (list of tags.)
 
 ### List CSR Tags [GET]
 
@@ -1022,8 +1025,7 @@ The following form fields are required in the POST body:
       ]
     }
 
-
-## Retrieving single CSR App by id [/api/1/csr/apps/{id}]
+## [/api/1/csr/apps/{id}]
 
 + Parameters
   + id (required, number, `1`)
