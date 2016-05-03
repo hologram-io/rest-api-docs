@@ -153,6 +153,117 @@ Either a numerical userid or the keyword `me` must be supplied in the request UR
             }
         }
 
+## Individual User Password Details [/api/1/users/password]
+
+
+### Change User Password [POST]
+
+The following form fields are required in the POST body:
+- **password** (string, required, new password)
+
++ Request (application/x-www-form-urlencoded)
+
+    password=lala
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": null
+}
+
+## Individual User Address Details [/api/1/users/addresses]
+
+### Retrieve Addresses [GET]
+
+On success, the response includes the following fields:
+- **id** (number, address id)
+- **userid** (number, user id)
+- **name** (string, user's name)
+- **line1** (string, line 1 of the address)
+- **line2** (string, line 2 of the address)
+- **city** (string)
+- **state** (string)
+- **zip** (string)
+- **country** (string)
+- **telephone** (string)
+- **notes** (string, any additional notes about the address)
+- **is_commercial** (bool, true if it is a commercial address)
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": [
+    {
+      "id": 43,
+      "userid": 477,
+      "name": "Reuben Balik",
+      "line1": "111 W Illinois St",
+      "line2": "",
+      "city": "Chicago",
+      "state": "IL",
+      "zip": "60654",
+      "country": "US",
+      "telephone": "7733396772",
+      "notes": "",
+      "is_commercial": 0
+    }
+  ]
+}
+
+## Individual User API Key Details [/api/1/users/apikey]
+
+
+### Retrieve API key [GET]
+
+On success, you will receive your API key.
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": {
+    "apikey": "qbeV4s9IPkHsR1234567890112456"
+  }
+}
+
+### Generate API Key [POST]
+
+On success, you will receive a newly generated API key.
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": {
+    "apikey": "qbeV4s9IPkHsR1234567890112456"
+  }
+}
+
+## Individual User Groups Details [/api/1/users/groups]
+
+### Retrieve User Groups [GET]
+
+On success, the response includes the following fields:
+- **id** (number, group id)
+- **name** (string, user group's name)
+- **groupkey** (string, group key)
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "somegroupname",
+      "groupkey": "P12345GYz16X"
+    }
+  ]
+}
+
+
 ## Individual User Billing and Credit Card Details [/api/1/users/{userid}/billing]
 Either a numerical userid or the keyword `me` must be supplied in the request URI.
 + Parameters
