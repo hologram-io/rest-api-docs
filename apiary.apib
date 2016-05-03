@@ -634,36 +634,55 @@ The following form fields are required in the POST body:
 The following form fields are optional in the POST body and are only applicable to phone numbers in the US/Canada: 
 - **areacode** (number, optional, area code to search in for phone number)
 
+On success, the repsonse includes the following fields:
+- **order_data** (object, contains data regarding the activation of the phone number.)
+- **preview** (bool, true if it is in preview mode)
+- **sku** (string, sku of the product)
+- **unit_cost** (number, unit cost of ordered product)
+- **total_cost** (number, total cost of ordered product)
+- **description** (string, description of ordered product)
+- **extra_description** (string, extra description of ordered product)
+- **needs_shipping** (bool, true if product needs shipping)
+- **shipping_cost** (number, shipping cost)
+- **sales_tax** (number, sales tax for ordered product)
+
 + Request (application/x-www-form-urlencoded)
 
         country=US&areacode=703
 
 + Response 200 (application/json)
 
-        {
-                "success": true,
-                "data": "+17035551212",
-                "order_data": {
-                    "preview": false,
-                    "id": "NUM",
-                    "unit_cost": "1.00",
-                    "description": "Phone number activation (US)",
-                    "extra_description": "device:Unnamed Device (52115), number:+15054659202",
-                    "needs_shipping": false
-                }
-        }
+   {
+     "success": true,
+     "data": null,
+     "order_data": {
+       "preview": true,
+       "sku": "NUM",
+       "unit_cost": "1.00",
+       "total_cost": "1.00",
+       "description": "Phone number activation (US)",
+       "extra_description": "",
+       "needs_shipping": false,
+       "shipping_cost": 0,
+       "sales_tax": 0
+     }
+   }
     
 ## Device Ordering [/api/1/orders/]
 
 ### Place a Device Order [POST]
 Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
 
++ Parameters
+    + preview (optional, number, `1`)
+        if set to `1` and supplied, will return cost (if any) of performing the operation WITHOUT actually performing it. This will not result in an actual order, which can be helpful if you're getting accustomed to the API and testing out your application.
+
 The following form fields are required in the POST body: 
 - **productid** (number, required, must be greater than 0)
 - **optionid** (number, required if productid has options, must be greater than 0)
 
 The following form fields are optional in the POST body: 
-- **shipping** (string, optional, shipping city)
+- **shipping** (object, optional, contains the recipient name, address etc. for the particular order)
 - **name** (string, optional, recipient name)
 - **line1** (string, optional, line 1 of shipping address)
 - **city** (string, optional)
@@ -688,8 +707,6 @@ On success, the response includes the following fields:
 - **shipping_cost** (number, shipping cost)
 - **sales_tax** (number, sales tax applied)
 
-Note: You can also choose to do this POST request with preview mode by appending ?preview=1 to the end of the url. This will not result in an actual order, which can be helpful if you're getting accustomed to the API and testing out your application.
-
 + Request (application/json)
 
     {
@@ -708,7 +725,7 @@ Note: You can also choose to do this POST request with preview mode by appending
     }
 
 + Response 200 (application/json)
-
+    
     {
       "success": true,
       "data": null,
