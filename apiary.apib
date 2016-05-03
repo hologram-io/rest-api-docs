@@ -1151,10 +1151,12 @@ On success, the response includes the following fields:
     }
 
 
-### Retrieve single CSR Source by id [/api/1/sources/{id}]
+### Retrieve Single CSR Source [/api/1/sources/{id}]
+
 + id (required, number, `12`)
     Will only return the result that matches the rule id if it is supplied.
 
++ Response 200 (application/json)
     {
       "success": true,
       "data": {
@@ -1166,7 +1168,7 @@ On success, the response includes the following fields:
       }
     }
 
-## CSR Rules [/api/1/rules/]
+## CSR Rules [/api/1/rules]
 
 
 ### List CSR Rules [GET]
@@ -1207,18 +1209,12 @@ On success, the response includes the following fields:
 
 ## Retrieving CSR Rules by id [/api/1/rules/{id}]
 
-### Retrieve Single CSR Rule by id [GET]
+### Retrieve Single CSR Rule [GET]
 
 + Parameters
   + id (required, number, `5`)
       Will only return the result that matches the rule id if it is supplied.
 
-
-## Delete CSR Rules [/api/1/rules/{id}]
-
-+ Parameters
-    + id (required, number, `4`)
-        Will only return the result that matches the rule id if it is supplied.
 
 ### Delete single CSR Rule by id [DELETE]
 
@@ -1228,20 +1224,109 @@ On success, the response includes the following fields:
         "success":true
     }
 
-## Creating CSR Rule [/api/1/rules/{id}]
+## Creating CSR Rule [/api/1/rules/]
 
-+ Parameters
-    + id (required, number, `4`)
-        Will only return the result that matches the rule id if it is supplied.
+The following form fields are required in the POST body:
+- **csrappid** (number, required, must be greater than 0)
+- **userproperties** (string, )
+- **tags** (string, required, tags for the new CSR rule)
+
+On success, the response includes the following fields:
+- **data** (object, data associated with the updated CSR rule)
+- **id** (number, CSR rule id)
+- **userid** (number, user's id)
+- **partnerid** (number, partner id)
+- **enabled** (bool, true if CSR rule is enabled)
+- **csrappid** (number, the CSR App id)
+- **userproperties** (string, the user properties string that was returned)
+- **hidden** (bool, true if it is hidden)
+- **tags** (list of strings, tags associated with the CSR rule)
 
 ### Create CSR Rule [POST]
+
++ Request (application/json)
+
+{
+    "csrappid":1,
+    "userproperties":"{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
+    "tags": [
+            "Tag100",
+            "Tag2001"
+          ]
+}
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": {
+    "id": 9,
+    "userid": 477,
+    "partnerid": 1,
+    "enabled": 1,
+    "csrappid": 1,
+    "userproperties": "{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
+    "hidden": 0,
+    "tags": [
+      "Tag100",
+      "Tag2001"
+    ]
+  }
+}
+
 
 
 ## Updating CSR Rule [/api/1/rules/{id}]
 
 + Parameters
-    + id (required, number, `4`)
+    + id (required, number, `9`)
         Will only return the result that matches the rule id if it is supplied.
-        
+
 ### Update CSR Rule [PUT]
+
+
+The following form fields are optional in the POST body and are only applicable to phone numbers in the US/Canada:
+- **csrappid** (number, required, must be greater than 0)
+- **userproperties** (string, user properties)
+- **tags** (list of strings, required, tags for the new CSR rule)
+
+On success, the response includes the following fields:
+- **data** (object, data associated with the updated CSR rule)
+- **id** (number, CSR rule id)
+- **userid** (number, user's id)
+- **partnerid** (number, partner id)
+- **enabled** (bool, true if CSR rule is enabled)
+- **csrappid** (number, the CSR App id)
+- **userproperties** (string, the user properties string that was returned)
+- **hidden** (bool, true if it is hidden)
+- **tags** (list of strings, tags associated with the CSR rule)
+
++ Request (application/json)
+
+{
+    "csrappid":1,
+    "tags": [
+            "Tag100",
+            "Tag1111"
+          ]
+}
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": {
+    "id": 9,
+    "userid": 477,
+    "partnerid": 1,
+    "enabled": 1,
+    "csrappid": 1,
+    "userproperties": "{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
+    "hidden": 0,
+    "tags": [
+      "Tag100",
+      "Tag1111"
+    ]
+  }
+}
 
