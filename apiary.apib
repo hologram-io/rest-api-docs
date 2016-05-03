@@ -659,32 +659,73 @@ The following form fields are optional in the POST body and are only applicable 
 Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
 
 The following form fields are required in the POST body: 
-- **quantity** (number, required, quantity of SIMs being ordered, must be greater than 0)
-- **line1** (string, required, shipping address line number 1)
-- **city** (string, required, shipping city)
-- **country** (string, required, shipping country)
+- **productid** (number, required, must be greater than 0)
+- **optionid** (number, required if productid has options, must be greater than 0)
 
 The following form fields are optional in the POST body: 
-- **state** (string, optional, shipping address state)
-- **zip** (string, required, shipping zip code or postal code)
-- **line2** (string, optional, shipping address line number 2)
-- **telephone** (string, optional, shipping recipient telephone number)
-- **notes** (string, optional, shipping notes)
+- **shipping* (string, optional, shipping city)
+- **name** (string, optional, recipient name)
+- **line1** (string, optional, line 1 of shipping address)
+- **city** (string, optional)
+- **state** (string, optional)
+- **country** (string, optional)
+- **zip** (number, optional)
+- **telephone** (number, optional)
 
 On success, the response includes the following fields: 
-- **id** (number, device order number)
-- **whenplaced** (string, device order timestamp)
+- **order_data** (object, order data)
+- **preview** (bool, if API call is in preview mode)
+- **sku** (string, the sku of the product)
+- **unit_cost** (number, the unit cost of the ordered product)
+- **discount** (number, the discount applied to the ordered product)
+- **total_cost** (number, the total cost of the ordered product)
+- **description** (string, product description)
+- **extra_description** (string, extra product description)
+- **quantity** (number, quantity ordered)
+- **preorder_details** (string, preorder details)
+- **needs_shipping** (bool, true if product requires shipping)
+- **free_shipping** (bool, true if shipping is free)
+- **shipping_cost** (number, shipping cost)
+- **sales_tax** (number, sales tax applied)
 
-+ Request (application/x-www-form-urlencoded)
++ Request (application/json)
 
-        quantity=1&line1=123%20Prosperity%20Way&city=Beverly%20Hills&state=CA&country=USA&zip=90210
+    {
+        "productid":1,
+        "optionid":1,
+        "shipping" : {
+            "name" : "someName",
+            "line1" : "something W Illinois St",
+            "city" : "Chicago",
+            "state" : "IL",
+            "country" : "US",
+            "zip" : "60654",
+            "telephone" : "1234567890"
+        }
+ 
+    }
 
 + Response 200 (application/json)
 
-        {
-            "success": true,
-            "data": []
-        }
+    {
+      "success": true,
+      "data": null,
+      "order_data": {
+        "preview": true,
+        "sku": "SIM-N2-2FF3FF",
+        "unit_cost": 5,
+        "discount": 0,
+        "total_cost": 5,
+        "description": "SIM Card",
+        "extra_description": "Global SIM Card[Combo Mini/Micro SIM]",
+        "quantity": 1,
+        "preorder_details": "",
+        "needs_shipping": true,
+        "free_shipping": false,
+        "shipping_cost": 5.85,
+        "sales_tax": 1.11
+      }
+    }
 
 # Group SMS
 
