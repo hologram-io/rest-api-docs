@@ -822,3 +822,116 @@ One of the following form fields are required in the POST body to provide the co
           "success": true,
           "data": null
         }
+
+# Group Cloud Services Router
+
+## CSR RDM [/api/1/csr/rdm/{recordid}]
+
++ Parameters
+    + recordid (optional, number, `13`)
+        Will only return the result that matches the record id if it is supplied. 
+
+### Retrieve RDM [GET]
+
+The following form fields are optional in the POST body: 
+
+
+On success, the response includes the following fields: 
+- **data** (list of objects, data)
+- **id** (number, rdm id) 
+- **logged** (string, the date at which it was logged)
+- **deviceid** (number, device id)
+- **data** (string, data stored)
+- **tags** (list of tags, list of tags associated with the rdm)
+
+
++ Response 200 (application/json)
+
+    {
+      "success": true,
+      "continues": false,
+      "data": [
+        {
+          "id": 14,
+          "logged": "2015-04-09 15:59:59",
+          "deviceid": 77,
+          "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestB\"],\"data\":\"dGVzdGRhdGEx\"}",
+          "record_id": "8e274992-cf84-11e5-a67e-bc764e20b516",
+          "tags": [
+            "TestB",
+            "TestXYZ"
+          ]
+        },
+        {
+          "id": 13,
+          "logged": "2015-04-08 21:05:42",
+          "deviceid": 1,
+          "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
+          "record_id": "8e2748e7-cf84-11e5-a67e-bc764e20b516",
+          "tags": [
+            "TestD",
+            "TestXYZ"
+          ]
+        },
+        {
+          "id": 12,
+          "logged": "2015-04-08 21:03:22",
+          "deviceid": 1,
+          "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
+          "record_id": "8e274838-cf84-11e5-a67e-bc764e20b516",
+          "tags": [
+            "TestXYZ",
+            "TestD"
+          ]
+        },
+        {
+          "id": 10,
+          "logged": "2015-04-07 22:05:02",
+          "deviceid": 1,
+          "data": "{\"source\":\"somesource\",\"tags\":[\"TestA\",\"TestE\"],\"data\":\"dGVzdGRhdGEx\"}",
+          "record_id": "8e274787-cf84-11e5-a67e-bc764e20b516",
+          "tags": [
+            "TestA",
+            "TestE"
+          ]
+        },
+        {
+          "id": 9,
+          "logged": "2015-04-07 22:04:30",
+          "deviceid": 1,
+          "data": "{\"source\":\"somesource\",\"tags\":[\"TestA\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
+          "record_id": "8e2746c9-cf84-11e5-a67e-bc764e20b516",
+          "tags": [
+            "TestA",
+            "TestD"
+          ]
+        },
+        {
+          "id": 8,
+          "logged": "2015-04-07 21:36:35",
+          "deviceid": 1,
+          "data": "{\"source\":\"somesource\",\"tags\":[\"TestA\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
+          "record_id": "8e274607-cf84-11e5-a67e-bc764e20b516",
+          "tags": [
+            "TestA",
+            "TestD"
+          ]
+        },
+        {
+          "id": 5,
+          "logged": "2015-03-19 18:08:45",
+          "deviceid": 1,
+          "data": "{\"source\":\"asdf\",\"tags\":[],\"data\":\"VGVzdGluZw==\"}",
+          "record_id": "8e2744d4-cf84-11e5-a67e-bc764e20b516",
+          "tags": []
+        },
+        {
+          "id": 4,
+          "logged": "2015-03-19 18:08:45",
+          "deviceid": 1,
+          "data": "{\"source\":\"asdf\",\"tags\":[],\"data\":\"VGVzdGluZw==\"}",
+          "record_id": "8e274336-cf84-11e5-a67e-bc764e20b516",
+          "tags": []
+        }
+      ]
+    }
