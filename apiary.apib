@@ -153,7 +153,7 @@ Either a numerical userid or the keyword `me` must be supplied in the request UR
             }
         }
 
-## Individual User Password Details [/api/1/users/password]
+## Individual User Password Details [/api/1/users/me/password]
 
 
 ### Change User Password [POST]
@@ -172,7 +172,7 @@ The following form fields are required in the POST body:
   "data": null
 }
 
-## Individual User Address Details [/api/1/users/addresses]
+## Individual User Address Details [/api/1/users/me/addresses]
 
 ### Retrieve Addresses [GET]
 
@@ -212,7 +212,7 @@ On success, the response includes the following fields:
   ]
 }
 
-## Individual User API Key Details [/api/1/users/apikey]
+## Individual User API Key Details [/api/1/users/me/apikey]
 
 
 ### Retrieve API key [GET]
@@ -241,7 +241,7 @@ On success, you will receive a newly generated API key.
   }
 }
 
-## Individual User Groups Details [/api/1/users/groups]
+## Individual User Groups Details [/api/1/users/me/groups]
 
 ### Retrieve User Groups [GET]
 
@@ -259,6 +259,132 @@ On success, the response includes the following fields:
       "id": 1,
       "name": "somegroupname",
       "groupkey": "P12345GYz16X"
+    }
+  ]
+}
+
+## Individual Balance Details [/api/1/users/me/balance]
+
+### Retrieve User Balance [GET]
+
+On success, the response includes the following fields:
+- **userid** (number, user id)
+- **balance** (number, user's current balance)
+- **promobalance** (number, user's promo balance)
+- **minbalance** (number, user's minimum balance)
+- **topoffamount** (number, top off amount for the user)
+- **pendingcharges** (number, pending charges)
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": {
+    "userid": 477,
+    "balance": "96.05",
+    "promobalance": "0.00",
+    "minbalance": "5.00",
+    "topoffamount": "0.00",
+    "pendingcharges": "0"
+  }
+}
+
+### Add Amount to Balance [POST]
+
+The following form fields are required in the POST body:
+- **addamount** (number, required, Amount to add to current user balance)
+
+On success, the response includes the following fields:
+- **order_data** (object, contains data regarding the activation of the phone number.)
+- **preview** (bool, true if it is in preview mode)
+- **sku** (string, sku of the product)
+- **unit_cost** (number, unit cost of ordered product)
+- **total_cost** (number, total cost of ordered product)
+- **description** (string, description of ordered product)
+- **extra_description** (string, extra description of ordered product)
+- **needs_shipping** (bool, true if product needs shipping)
+- **shipping_cost** (number, shipping cost)
+- **sales_tax** (number, sales tax for ordered product)
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": null,
+  "order_data": {
+    "preview": false,
+    "sku": "ACCTREFILL",
+    "unit_cost": "123",
+    "total_cost": "123",
+    "description": "Refill Account Balance",
+    "extra_description": "User-purchased account refill",
+    "needs_shipping": false,
+    "shipping_cost": 0
+  }
+}
+
+## Individual Balance Parameter Details [/api/1/users/me/balanceparams]
+
+
+### Update Balance Parameters [POST]
+
+The following form fields are optional in the POST body:
+- **minbalance** (number, optional, minimum balance)
+- **topoffamount** (number, optional, top off amount for current user)
+
+On success, the response includes the following fields:
+- **userid** (number, user id)
+- **balance** (number, user's current balance)
+- **promobalance** (number, user's promo balance)
+- **minbalance** (number, user's minimum balance)
+- **topoffamount** (number, top off amount for the user)
+
++ Request (application/x-www-form-urlencoded)
+
+        minbalance=11111
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": {
+    "userid": 477,
+    "balance": "219.05",
+    "promobalance": "0.00",
+    "minbalance": "11111.00",
+    "topoffamount": "0.00"
+  }
+}
+
+## Individual Balance History Details [/api/1/users/me/balancehistory]
+
+### Retrieve User Balance History [GET]
+
+On success, the response includes the following fields:
+- **id** (number, balance history id)
+- **userid** (number, user id)
+- **time** (string, timestamp of the balance)
+- **description** (string, description of the balance change)
+- **amount** (number)
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": [
+    {
+      "id": 2,
+      "userid": 477,
+      "time": "2016-04-26 20:31:42",
+      "description": "Charge to balance: Data plan for SIM 8944502211130209115",
+      "amount": "-3.95"
+    },
+    {
+      "id": 1,
+      "userid": 477,
+      "time": "2016-04-26 20:30:45",
+      "description": "one hundred",
+      "amount": "100.00"
     }
   ]
 }
