@@ -1920,4 +1920,22 @@ On success, the response includes the following fields:
   }
 }
 
-## 
+## Cellular Images [/api/1/links/cellular/images]
+
+### Retrieve Cellular Images [GET]
+
+On success, the response includes the following fields:
+- **image_url** (string, the image url)
+- **carrierid** (number, carrier id)
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": [
+    {
+      "image_url": "asdf",
+      "carrierid": 1
+    }
+  ]
+}
