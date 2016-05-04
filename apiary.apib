@@ -1939,3 +1939,31 @@ On success, the response includes the following fields:
     }
   ]
 }
+
+## Changing States [/api/1/links/cellular/{id}/state]
+
++ Parameters
+    + id (required, number, '37')
+        Will only return the result that matches the rule id if supplied.
+
+### Change Cellular State [POST]
+
+
+The following form fields are required in the POST body:
+- **state** (number, required, the new state. Possible states include: 'live', 'pause' and 'deactivate')
+
+On success, the response includes the following fields:
+- **newstate** (string, the device's new state)
+
++ Request (application/x-www-form-urlencoded)
+
+    state=live
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": {
+    "newstate": "LIVE"
+  }
+}
