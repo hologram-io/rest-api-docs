@@ -1575,7 +1575,7 @@ On success, the response includes the following fields:
 
 + Parameters
     + id (required, number, '9')
-        Will only return the result that matches the fule id if it supplied.
+        Will only return the result that matches the rule id if it supplied.
 
 ### Enable CSR Rule [POST]
 
@@ -1615,7 +1615,7 @@ On success, the response includes the following fields:
 
 + Parameters
     + id (required, number, '9')
-        Will only return the result that matches the fule id if it supplied.
+        Will only return the result that matches the rule id if it supplied.
 
 ### Disable CSR Rule [POST]
 
@@ -1706,3 +1706,152 @@ On success, the response includes the following fields:
 }
 
 
+## Individual Cellular Link [/api/1/links/cellular/{id}]
+
++ Parameters
+    + id (required, number, '37')
+        Will only return the result that matches the rule id if it supplied.
+
+### Retrieve Cellular Links by id [GET]
+
+On success, the response includes the following fields:
+- **id** (number, cellular link id)
+- **deviceid** (number, device id)
+- **devicename** (string, name of the device)
+- **userid** (number, user's id)
+- **partnerid** (number, partner id)
+- **sim** (string, SIM card number)
+- **msisdn** (string)
+- **imsi** (string, imsi)
+- **dataplansubscriptionid** (number, data plan subscription id)
+- **tier** (number, tier)
+- **carrier** (number, carrier id)
+- **state** (string, device state)
+- **whenclaimed** (string, when was the SIM number claimed)
+- **whenexpires** (string)
+- **whencreated** (string)
+- **overagelimit** (number)
+- **priv_ip_address** (string, private IP address)
+- **apn** (string)
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": [
+    {
+      "id": 37,
+      "deviceid": 0,
+      "devicename": null,
+      "userid": null,
+      "partnerid": 0,
+      "sim": "99900001",
+      "msisdn": "1111111",
+      "imsi": 1000001,
+      "dataplansubscriptionid": 0,
+      "tier": 0,
+      "carrier": 1,
+      "state": "LIVE",
+      "whenclaimed": "0000-00-00 00:00:00",
+      "whenexpires": "0000-00-00 00:00:00",
+      "whencreated": "2016-05-02 14:59:53",
+      "overagelimit": -1,
+      "priv_ip_address": "0.0.0.0",
+      "apn": "test"
+    }
+  ]
+}
+
+## Changing Plans [/api/1/links/cellular/{id}/changeplan]
+
++ Parameters
+    + id (required, number, '37')
+        Will only return the result that matches the rule id if supplied.
+
+### Change Plan [POST]
+
+- **order_data** (object, contains data regarding the activation of the phone number.)
+- **preview** (bool, true if it is in preview mode)
+- **sku** (string, sku of the product)
+- **unit_cost** (number, unit cost of ordered product)
+- **total_cost** (number, total cost of ordered product)
+- **description** (string, description of ordered product)
+- **extra_description** (string, extra description of ordered product)
+- **needs_shipping** (bool, true if product needs shipping)
+- **shipping_cost** (number, shipping cost)
+
++ Request (application/x-www-form-urlencoded)
+
+    planid=52&tier=1
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": null,
+  "order_data": {
+    "preview": false,
+    "sku": "PLANCHANGE",
+    "unit_cost": 0,
+    "total_cost": 0,
+    "quantity": 1,
+    "description": "Plan Change for 1 SIMs",
+    "extra_description": "Plan:3 MB($3.40 per 24 months)",
+    "needs_shipping": false,
+    "shipping_cost": 0
+  }
+}
+
+## Claiming SIMs [/api/1/links/cellular/sim_:{sim}/claim]
+
++ Parameters
+    + sim (required, number, '99900001')
+        Will only return the result that matches the rule id if supplied.
+
+### Claim a SIM [POST]
+
+
+The following form fields are required in the POST body:
+- **plan** (number, required, the plan id that is going to be used)
+
+On success, the response includes the following fields:
+- **device** (number, devide id)
+- **link** (number, link id)
+- **sim** (number, SIM number)
+- **order_data** (object, contains data regarding the activation of the phone number.)
+- **preview** (bool, true if it is in preview mode)
+- **sku** (string, sku of the product)
+- **unit_cost** (number, unit cost of ordered product)
+- **total_cost** (number, total cost of ordered product)
+- **description** (string, description of ordered product)
+- **extra_description** (string, extra description of ordered product)
+- **needs_shipping** (bool, true if product needs shipping)
+- **shipping_cost** (number, shipping cost)
+
++ Request (application/x-www-form-urlencoded)
+
+    sim=99900001
+
++ Response 200 (application/json)
+
+{
+  "success": true,
+  "data": [
+    {
+      "device": 82,
+      "link": 37,
+      "sim": "99900001"
+    }
+  ],
+  "order_data": {
+    "preview": false,
+    "sku": "PLAN",
+    "unit_cost": 81.6,
+    "total_cost": 81.6,
+    "quantity": 1,
+    "description": "Data plan for SIM 99900001",
+    "extra_description": "Plan:3 MB($3.4 per 24 months), Activation:$0(included)",
+    "needs_shipping": false,
+    "shipping_cost": 0
+  }
+}
