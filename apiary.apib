@@ -647,10 +647,10 @@ All fields supplied in the request are optional and are supported for filtering 
             ]
         }
 
-## Individual Device Data Plan Details [/api/1/devices/{planid}]
+## Individual Device Data Plan Details [/api/1/plans/{planid}]
 A numerical plan ID must be supplied in the request URI.
 + Parameters
-    + planid (required, number, `73`)
+    + planid (required, number, `146`)
         id of the device data plan whose details to retrieve
 
 ### Retrieve individual device data plan details [GET]
@@ -658,38 +658,39 @@ A numerical plan ID must be supplied in the request URI.
 + Response 200 (application/json)
 
         {
-            "success":true,
-            "data": {
-                "id":73,
-                "partnerid":12,
-                "name":"1MB",
-                "description":"1 MB of data per month",
-                "data":1000000,
-                "recurring":1,
-                "enabled":1,
-                "amount1":3,
-                "amount2":4,
-                "amount3":5,
-                "amount4":6,
-                "amount5":7,
-                "billingperiod":1,
-                "overage1":0.1,
-                "overage2":0.2,
-                "overage3":0.3,
-                "overage4":0.4,
-                "overage5":0.5,
-                "sms1":0.2,
-                "sms2":0.3,
-                "sms3":0.4,
-                "sms4":0.5,
-                "sms5":0.65,
-                "trialdays":30,
-                "templateid":13,
-                "carrierid": 3,
-                "groupid": 0
-            }
+			"success": true,
+		  	"data": [
+				{
+				  "id": 146,
+				  "partnerid": 12,
+				  "name": "20 MB",
+				  "description": "",
+				  "data": 20000000,
+				  "recurring": 1,
+				  "enabled": 1,
+				  "amount1": "5.99",
+				  "amount2": "12.99",
+				  "amount3": "-1.00",
+				  "amount4": "-1.00",
+				  "amount5": "-1.00",
+				  "billingperiod": 1,
+				  "overage1": "1.00",
+				  "overage2": "1.50",
+				  "overage3": "-1.00",
+				  "overage4": "-1.00",
+				  "overage5": "-1.00",
+				  "sms1": "0.19",
+				  "sms2": "0.30",
+				  "sms3": "-1.00",
+				  "sms4": "-1.00",
+				  "sms5": "-1.00",
+				  "trialdays": 0,
+				  "templateid": 0,
+				  "carrierid": 2,
+				  "groupid": 0
+				}
+			]
         }
-
 
 # Group Devices
 
