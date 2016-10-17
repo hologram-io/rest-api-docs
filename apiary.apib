@@ -1077,7 +1077,7 @@ On success, the response includes the following fields:
 - **logged** (string, the date at which it was logged)
 - **deviceid** (number, device id)
 - **data** (string, data stored)
-- **tags** (list of tags, list of tags associated with the rdm)
+- **tags** (list of strings, topics (formerly called tags) associated with the rdm)
 
 + Response 200 (application/json)
 
@@ -1211,12 +1211,12 @@ The following form fields are required in the POST body:
     }
 
 
-## CSR Tags [/api/1/csr/tags]
+## CSR Topics (formerly Tags) [/api/1/csr/tags]
 
 On success, the response includes the following fields:
-- **data** (list of tags.)
+- **data** (list of topics/tags)
 
-### List CSR Tags [GET]
+### List CSR Topics [GET]
 
 + Response 200 (application/json)
     {
@@ -1474,7 +1474,7 @@ On success, the response includes the following fields:
 The following form fields are required in the POST body:
 - **csrappid** (number, required, must be greater than 0)
 - **userproperties** (string, user properties)
-- **tags** (string, required, tags for the new CSR rule)
+- **tags** (string, required, topics (formerly called tags) for the new CSR rule)
 
 On success, the response includes the following fields:
 - **data** (object, data associated with the updated CSR rule)
@@ -1485,7 +1485,7 @@ On success, the response includes the following fields:
 - **csrappid** (number, the CSR App id)
 - **userproperties** (string, the user properties string that was returned)
 - **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, tags associated with the CSR rule)
+- **tags** (list of strings, topics (formerly called tags) associated with the CSR rule)
 
 + Request (application/json)
 
@@ -1530,7 +1530,7 @@ On success, the response includes the following fields:
 The following form fields are optional in the POST body and are only applicable to phone numbers in the US/Canada:
 - **csrappid** (number, required, must be greater than 0)
 - **userproperties** (string, user properties)
-- **tags** (list of strings, required, tags for the new CSR rule)
+- **tags** (list of strings, required, topics (formerly called tags) for the new CSR rule)
 
 On success, the response includes the following fields:
 - **data** (object, data associated with the updated CSR rule)
@@ -1541,7 +1541,7 @@ On success, the response includes the following fields:
 - **csrappid** (number, the CSR App id)
 - **userproperties** (string, the user properties string that was returned)
 - **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, tags associated with the CSR rule)
+- **tags** (list of strings, topics (formerly called tags) associated with the CSR rule)
 
 + Request (application/json)
 
@@ -1589,7 +1589,7 @@ On success, the response includes the following fields:
 - **csrappid** (number, the CSR App id)
 - **userproperties** (string, the user properties string that was returned)
 - **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, tags associated with the CSR rule)
+- **tags** (list of strings, topics (formerly called tags) associated with the CSR rule)
 
 
 + Response 200 (application/json)
@@ -1629,7 +1629,7 @@ On success, the response includes the following fields:
 - **csrappid** (number, the CSR App id)
 - **userproperties** (string, the user properties string that was returned)
 - **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, tags associated with the CSR rule)
+- **tags** (list of strings, topics (formerly called tags) associated with the CSR rule)
 
 
 + Response 200 (application/json)
