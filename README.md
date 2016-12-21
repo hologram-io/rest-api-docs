@@ -1,7 +1,10 @@
 # Hologram REST API Documentation
 
-##Introduction
-The public Hologram REST API provides access to all the same capabilities as our Dashboard.
+This repo contains the source API Blueprint file for Hologram's REST API
+documentation. Find the actual API docs on [Apiary](docs.hologram.apiary.io/#).
+
+Our main documentation site, including guides, tutorials, and non-REST reference
+documentation is at [hologram.io/docs](https://hologram.io/docs/).
 
 ## Support
 
