@@ -3,97 +3,613 @@ HOST: https://dashboard.hologram.io
 
 # Hologram
 
-# Available APIs
-We have two public APIs, one that is a *REST API* and one that is a *low-level TCP/IP socket service API*.
+The Hologram HTTP API is a REST-style interface for managing Hologram devices,
+accounts, and cloud data.
 
-## *REST API* Features
-Our REST API provides access to the following features:
-- Device Management
-- Incoming & Outgoing SMS
-- Cloud features
+## Requests
 
-## *TCP/IP Socket Service API* Features
-Our low-level TCP/IP socket service API is how devices interact with our platform and provides access to the folowing features:
-- Outgoing SMS
-- Cloud features
+To authenticate to the API, you must provide your API key as a query string parameter in each request.
+Find your API key on the Hologram Dashboard under 
+[Account Settings](https://dashboard.hologram.io/account/api):
 
-# Other Documentation Available
+![API key screenshot](http://hologram.io/wp-content/uploads/2016/12/apikey.png)
 
-We currently have two primary types of documentation:
-- REST API Documentation _(this document)_
-- Cloud User & API Documentation: https://hologram.io/docs/reference/api/hologram-device-socket-api-documentation/
+Your API key gives you access to your personal account, as well as any organizations
+you are a member of. Many API endpoints accept an `orgid` argument to filter for devices or other objects
+within a specific organization.
 
-# Group Authentication
-Every REST API call is authenticated against either a **supplied user/password**, a **supplied pre-shared apikey**, a **supplied temporary session sesskey**, or a temporary **cookie-based session**. The Authentication group of API calls serves the purpose of establishing/managing sessions and their corresponding sesskey (used in cross-domain settings and special-use scenarios where cookie-based sessions for any reason cannot be used).
+Request bodies can be provided in either JSON or form-urlencoded formats. In the reference examples below, 
+only the JSON versions are shown, and the `apikey` query string parameter is omitted for brevity.
 
-Note: An alternative to session-based authentication exists, which requires authentication on every API call. Please contact us if you are in need of this capability for your application.
+### Examples
 
-## Session Creation [/api/1/auth/session]
-### Create a new session using user/password authentication [POST]
-Both **email** and **password** form fields must be supplied with values in the POST body.
+**GET**
 
-Cookie-based session information will be returned upon successful session creation, as well as an object that represents information about the user account and session.
+```
+curl --verbose --request GET \
+'https://dashboard.hologram.io/api/1/users/me?apikey=2rjpYZZNzFAoGxAgEP2SC6moL3emyB'
+```
 
-(For cross-domain or other applications that are for any reason unable to utilize the cookie, a temporary `sesskey` string is provided in the returned object that can be supplied as either a GET or POST variable for authorization when calling subsequent API calls.)
+**POST with JSON body**
 
-Note: Sessions automatically time out after extended periods of inactivity.
+```
+curl --verbose --request POST \
+--header "Content-Type: application/json" \
+--data '{"deviceid": 56668, "body": "Hello device!"}' \
+'https://dashboard.hologram.io/api/1/sms/incoming?apikey=2rjpYZZNzFAoGxAgEP2SC6moL3emyB'
+```
 
-+ Request (application/x-www-form-urlencoded)
+**POST with form-urlencoded body**
 
-    email=someone@example.com&password=joepassword
+```
+curl --verbose --request POST \
+--header "Content-Type: application/x-form-urlencoded" \
+--data 'deviceid=56668&body=Hello%20device!' \
+'https://dashboard.hologram.io/api/1/sms/incoming?apikey=2rjpYZZNzFAoGxAgEP2SC6moL3emyB'
+```
 
-+ Response 200 (application/json)
+## Responses
 
-    {
-      "success": true,
-      "data": {
-        "sesskey": "somesessionkeystring",
-        "userid": 123,
-        "email": "someone@example.com",
-        "first": "someFirstName",
-        "last": "someLastName",
-        "role": "somerole",
-        "has_password": 1,
-        "partnerid": 1
-      }
-    }
+All API responses are returned as JSON objects with the following fields:
 
-## Session Destruction and Logout [/api/1/auth/sessiondestroy]
-### Destroy a cookie-based session without supplying sesskey [POST]
+* `success` (boolean) - Indicates whether the request was successful.
+* `data` (object or array) - Contains the requested data or information about
+  the operation that was performed. Only present when `success` is true.
+* `error` (string) - Information about why the request failed. Only present when
+  `success` is false.
 
-+ Response 200 (application/json)
+In addition to these body fields, the API uses standard HTTP status codes
+to indicate success (200) and common errors (403 Forbidden, etc).
 
-        {
-            "success": true,
-            "data": null
-        }
+### Examples
 
-### Destroy a session by supplying sesskey [POST]
-+ Request (application/x-www-form-urlencoded)
+**Success response**
 
-        sesskey=somesessionkeystring
+```
+{
+  "success": true,
+  "data": {
+    "msgcount": 1
+  }
+}
+```
 
-+ Response 200 (application/json)
+**Error response**
 
-        {
-            "success": true,
-            "data": null
-        }
+```
+{
+  "success": false,
+  "error": "Not logged in"
+}
+```
 
-# Group Users
+## Data Structures
 
-## User Accounts [/api/1/users/{?email}]
-Our API provides optional user management and authentication for partners that wish to utilize our built-in access control.
+### User (object)
 
-### List users [GET]
-All fields supplied in the request are optional and are supported for filtering results.
++ id: 1234 (number) - Unique user id
++ email: joe@example.com (string, required) - Email address of user. 
+    This is the address that is used for logging into the Hologram Dashboard.
++ partnerid: 123 (number)ds
++ first: Joe (string) - First name
++ last: Schmoe (string) - Last name
++ role (string) - Indicates if the user is an admin. Normally empty.
++ registered (string) - Date that the user created her account
+    + Sample: 2015-05-30 20:41:28
++ billingmethod (string)
+
+### Organization (object)
+
++ id: 2345 (number) - Unique ID for the organization
++ name: Smart Things LLC (string) - Display name
++ is_personal: false (boolean) - Is this organization a personal organization belonging to a single user?
++ ownerid: 1234 (number) - ID of the user that created the organization
++ users (array) - Members of the organization
++ pending (array) - Users with pending invitations to the organization
+
+### OrgUser (object)
+
++ id: 1234 (number) - Unique user id
++ email: joe@example.com (string) - Email address of user. 
++ first: Joe (string) - First name
++ last: Schmoe (string) - Last name
++ permissions (array) - Which actions the user has permission to perform
+    + billing
+    + activation
+    + changeplan
+
+### Account Balance (object)
+
++ userid: 1234 (number)
++ orgid: 2345 (number) - Organization ID
++ balance: 96.05 (string) - User balance
++ promobalance: 0.00 (string) - Additional balance from promotions
++ minbalance: 50.00 (string) - Auto reload minimum balance as configured in the dashboard
++ topoffamount: 0.00 (string) - Auto reload amount as configured in the dashboard
++ pendingcharges: 0 (string)
+
+### Order Data (object)
+
++ preview: false (boolean) - Was the request a preview (true) or an actual transaction (false)?
++ sku: ACCTREFILL (string)
++ unit_cost: 123.50 (number)
++ total_cost: 123.50 (number)
++ description: Refill Account Balance (string)
++ extra_description: User purchased account refill (string)
++ needs_shipping: false (boolean)
++ shipping_cost: 0 (number)
+
+### Cellular Link (object)
+
++ id: 4321 (number) - The link's unique integer ID
++ deviceid: 1234 (number) - Device ID corresponding to the link
++ devicename: "My Device" (string) - Description of the device
++ orgid: 123 (number) - ID of the organization that owns the link
++ tunnelable: 0 (number) - Is tunneling enabled for the link? (1=true, 0=false)
++ partnerid (number)
++ sim: 9990000000000001234 (string) - SIM number corresponding to the link
++ msisdn: 999900001234 (string) - MSISDN corresponding to the link
++ imsi: 123456789876543 (number) - IMSI corresponding to the link
++ dataplansubscriptionid: 75 (number) - The link's data plan type
++ tier: 1 (number) - Geographical zone of the link's data plan
++ carrier: 2 (number) - ID of the carrier that the link last connected to
++ state: LIVE (string) - State of the link (LIVE, PAUSE, DEACTIVATE)
++ whenclaimed (string) - Timestamp when the SIM was activated
+    + Sample: 2016-10-17 15:56:16
++ whenexpires (string) - Timestamp when the current billing period ends, or when the subscription expired
+    + Sample: 2017-01-15 15:59:53
++ whencreated (string) - Timestamp when the link's record was first created
+    + Sample: 2016-10-04 04:57:17
++ overagelimit: 20000 (number) -
+    Configured overage limit, or -1 if no limit is set. See the 
+    [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits) 
+    for details on overage limits.
++ apn: hologram (string) - APN to use when connecting with this link's SIM card
+
+### Data Plan (object)
+
++ id: 127 (number) - Unique integer ID for the data plan
++ partnerid: 1 (number) - unused
++ name: 1 MB (string) - Human-readable name
++ description (string)
++ data: 1000000 (number) - Monthly data included in the plan (in bytes)
++ recurring: 1 (number) - for internal use
++ enabled: 1 (number) - Whether plan is available for new subscriptions
++ amount1: 0.99 (string) - Monthly base cost (zone 1)
++ amount2: 1.29 (string) - Monthly base cost (zone 2)
++ amount3 (string) - Monthly base cost (zone 3, unused)
+    + Sample: -1.00
++ amount4 (string) - Monthly base cost (zone 4, unused)
+    + Sample: -1.00
++ amount5 (string) - Monthly base cost (zone 5, unused)
+    + Sample: -1.00
++ billingperiod: 1 - for internal use
++ overage1: 1.00 (string) - Data overage cost per MB (zone 1)
++ overage2: 1.50 (string) - Data overage cost per MB (zone 2)
++ overage3 (string) - Data overage cost per MB (zone 3, unused)
+    + Sample: -1.00
++ overage4 (string) - Data overage cost per MB (zone 4, unused)
+    + Sample: -1.00
++ overage5 (string) - Data overage cost per MB (zone 5, unused)
+    + Sample: -1.00
++ sms1: 0.19 (string) - Outbound SMS cost per message (zone 1)
++ sms2: 0.30 (string) - Outbound SMS cost per message (zone 2)
++ sms3 (string) - Outbound SMS cost per message (zone 3, unused)
+    + Sample: -1.00
++ sms4 (string) - Outbound SMS cost per message (zone 4, unused)
+    + Sample: -1.00
++ sms5 (string) - Outbound SMS cost per message (zone 5, unused)
+    + Sample: -1.00
++ trialdays: 0 (string) - for internal use
++ templateid: 0 (string) - for internal use
++ carrierid: 2 (number) - for internal use
++ groupid: 0 (number) - for internal use
+
+### Device Tag (object)
+
++ name: My Tag (string) - Human-readable tag name
++ id: 123 (number) - Unique integer ID
++ deviceids (array) - IDs of devices linked to this tag
+    + 1234 (number)
+    + 1236 (number)
+
+### Device (object)
+
++ id: 1234 (number) - Integer device ID
++ orgid: 321 (number) - ID of the organization that owns the device (may be a personal organization)
++ name: My Device (string) - User-configurable device name
++ type (string) - for internal use
++ whencreated (string) - Timestamp when the device record was created
++ phonenumber (string) - Device phone number, if configured
++ tunnelable: 0 (number) - Is tunneling enabled for the device? 
+    See the [guide](https://hologram.io/docs/guide/cloud/spacebridge-tunnel) for details
++ hidden: 0 (number) - for internal use
++ tags (array) - Configurable device categories. See [Device Tags](#reference/device-management/device-tags/) for details.
++ links
+    + cellular (array) - Information about the device's SIM and data plan
+
+## Group Device Management
+
+See the [guide](https://hologram.io/docs/guide/connect/device-management)
+for details on devices, data plans, and related options.
+
+## Devices [/api/1/devices/{deviceid}]
+
+### List Devices [GET /api/1/devices{?orgid}]
+
 + Parameters
-    + email (optional, string, `joe@example.com`)
-        email address filter for searching users list
+    + orgid: 1234 (number, optional)
+        Only return results for the given organization ID
 
-+ Request (application/x-www-form-urlencoded)
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Device)
 
-        email=joe@example.com
+### Get a Device [GET /api/1/devices/{deviceid}]
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device)
+
+## Cellular Links [/api/1/links/cellular]
+
+A Cellular Link is the association between a Device and a cellular data plan and SIM. Typically, 
+a device has exactly one Cellular Link.
+
+### Activate SIMs [POST /api/1/links/cellular/bulkclaim]
+
+Corresponds to the dashboard's [Activate SIM](https://dashboard.hologram.io/activate) page.
+Activating a SIM creates a new device and corresponding cellular link. 
+
++ Request (application/json)
+    + Attributes
+        + sims (array) - array of SIM numbers to activate
+            + 99990000000012345678
+        + plan: 73 (number) - 
+            Device data plan. Look up plan IDs with 
+            [List Data Plans](#reference/device-management/data-plans/list-data-plans).
+        + tier: 1 (number) - 
+            Geographic zone. Currently the valid tiers are `1` and `2`.
+            Higher tiers incur higher costs. See [pricing](https://hologram.io/pricing/) for details.
+        
++ Request Activate SIM range (application/json)
+    + Attributes
+        + simrange (string) - range of SIM numbers to activate
+            + Sample:  99990000000012345678-99990000000012345699
+        + plan: 73 (number) - 
+            Device data plan. Look up plan IDs with 
+            [List Data Plans](#reference/device-management/data-plans/list-data-plans).
+        + tier: 1 (number) - 
+            Geographic zone. Currently the valid tiers are `1` and `2`.
+            Higher tiers incur higher costs. See [pricing](https://hologram.io/pricing/) for details.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (object)
+                + device: 1234 (number) - Device ID of the new corresponding device
+                + link: 3214 (number) - ID of the new cellular link
+                + sim: 99990000000012345678 (string)
+        + order_data (Order Data)
+            + sku: PLAN
+            + unit_cost: 0.4
+            + total_cost: 0.4
+            + description: Data plan for SIMs 
+            + extra_description
+                + Sample: Plan:Pay-as-you-go
+
+### List Cellular Links [GET /api/1/links/cellular{?orgid}]
+
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return results for the given organization ID
+    
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Cellular Link)
+
+### Get Cellular Link [GET /api/1/links/cellular/{linkid}]
+
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to retrieve
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Cellular Link)
+
+### Change Plan [POST /api/1/links/cellular/{linkid}/changeplan]
+
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to change
+    
++ Request (application/json)
+    + Attributes
+        + planid: 73 (number) - 
+            Device data plan. Look up plan IDs with 
+            [List Data Plans](#reference/device-management/data-plans/list-data-plans).
+        + tier: 1 (number) - 
+            Geographic zone. Currently the valid tiers are `1` and `2`.
+            Higher tiers incur higher costs. See [pricing](https://hologram.io/pricing/) for details.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + order_data (Order Data)
+            + sku: PLANCHANGE
+            + unit_cost: 2.23
+            + total_cost: 2.23
+            + description: Plan Change for 1 SIM
+            + transaction_type_id: PC (string)
+            + extra_description (string)
+                + Sample: Plan:5 MB
+
+### Change Overage Limit [POST /api/1/links/cellular/{linkid}/overagelimit]
+
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to modify
+    
++ Request (application/json)
+    + Attributes
+        + limit: 20000 (number) - 
+            Number of bytes over the plan limit to allow. Set `-1` for no data limit. See the 
+            [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits) for details.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Cellular Link)
+
+### Pause or Unpause Data [POST /api/1/links/cellular/{linkid}/state]
+
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to modify
+    
++ Request (application/json)
+    + Attributes
+        + state: pause (string) - New link state to set. One of: `pause`, `live`.
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (object)
+            + newstate: PAUSED-PENDING-USER (string) - New state of the link. 
+                May be a 'pending' state until the change is propagated to the cellular network.
+
+
+## Device Tags [/api/1/devices/tags]
+
+Device tags are user-configurable categories that you can use to classify your devices. A device
+may be linked to more than one tag.
+
+### List Device Tags [GET /api/1/devices/tags]
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Device Tag)    
+
+### Create a Device Tag [POST /api/1/devices/tags]
+
++ Request (application/json)
+    + Attributes
+        + name: My Tag (string, required) - Name for the new tag
+        + deviceids (array, optional) - Devices to add to the new tag (optional)
+    
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device Tag)
+
+### Delete a Device Tag [DELETE /api/1/devices/tags/{tagid}]
+
++ Parameters
+    + tagid: 1234 (number) - The ID of the tag to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+### Link a Device to a Tag [POST /api/1/devices/tags/{tagid}/link]
+
++ Parameters
+    + tagid: 1234 (number) - The ID of the tag
+    
++ Request (application/json)
+    + Attributes
+        + deviceids (array) - List of device IDs to link to this tag
+            + 4321 (number)
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device Tag)
+
+### Unlink a Device from a Tag [POST /api/1/devices/tags/{tagid}/unlink]
+
++ Parameters
+    + tagid: 1234 (number) - The ID of the tag
+
++ Request (application/json)
+    + Attributes
+        + deviceids (array) - List of device IDs to unlink from this tag
+            + 4321 (number)
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device Tag)
+
+
+## Data Plans [/api/1/plans]
+
+The Data Plans endpoints return pricing and descriptions for the different data plans 
+that Hologram offers. When changing the data plan for a cellular link via API, 
+you must refer to the plan by its ID, which you can determine from these endpoints.
+
+### List Data Plans [GET /api/1/plans]
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Data Plan)
+    
+### Get a Data Plan [GET /api/1/plans/{planid}]
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Data Plan)
+
+
+## Group Hologram Cloud
+
+## CSR Messages [/api/1/csr/rdm]
+
+See the [guide](https://hologram.io/docs/guide/cloud/csr) for details on the 
+Cloud Services Router (CSR).
+
+### Send a CSR Message [POST]
+
++ Request (application/json)
+    + Attributes
+        + deviceid: 54321 (number) - Device ID to associate the message to
+        + tags (array, optional) - Additional topics to associate with the message. Optional
+        + data: Hello, Hologram! (string) - Data payload of the message
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+### List CSR Messages [GET /api/1/csr/rdm{?deviceid,limit,orgid,tagname,timestampstart,timestampend}]
+
++ Parameters
+    + deviceid: 54321 (number, optional) - Optional. Filter for messages originating from one device
+    + limit: 100 (number, optional) - Return a maximum of this many messages. Default is 25
+    + orgid: 3222 (number, optional) - Filter for messages from devices belonging to this organization
+    + tagname: _RESTAPI_ (string, optional) - Filter for messages with a given topic
+    + timestampstart: 1480550400 (number, optional) - Only return messages received after this time (Unix timestamp)
+    + timestampend: 1480550400 (number, optional) - Only return messages received before this time (Unix timestamp)
+
++ Response 200
+    + Attributes
+        + id: 123432 (number) - Numerical identifier for the message
+        + logged (string) - Datetime when the message was received
+            + Sample: 2016-12-04 20:21:00
+        + deviceid: 1234 (number) - Device that the message originated from
+        + data (string) - Raw message data and metadata
+        + record_id (string) - the message's internal UUID
+            + Sample: 8e274992-cf84-11e5-a67e-bc764e20b516
+        + tags (array) - Topics (formerly called tags) associated with the message
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "continues": false,
+          "data": [
+            {
+              "id": 14,
+              "logged": "2015-04-09 15:59:59",
+              "deviceid": 77,
+              "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestB\"],\"data\":\"dGVzdGRhdGEx\"}",
+              "record_id": "8e274992-cf84-11e5-a67e-bc764e20b516",
+              "tags": [
+                "TestB",
+                "TestXYZ"
+              ]
+            },
+            {
+              "id": 13,
+              "logged": "2015-04-08 21:05:42",
+              "deviceid": 1,
+              "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
+              "record_id": "8e2748e7-cf84-11e5-a67e-bc764e20b516",
+              "tags": [
+                "TestD",
+                "TestXYZ"
+              ]
+            }
+          ]
+        }
+
+
+## SMS [/api/1/sms]
+
+### Send SMS to a device [POST /api/1/sms/incoming]
+
+There is no cost to send SMS messages to Hologram devices via API.
+
++ Request (application/json)
+    + Attributes
+        + deviceid: 1234 (number, required) - ID of the device to send to
+        + fromnumber: `+1-312-555-1212` (string, optional) - Phone number to display as the sender. Optional.
+        + body: Hello world! (string) - ASCII Text representation of the SMS body
+
++ Request With base64-encoded body (application/json)
+    + Attributes
+        + deviceid: 1234 (number, required) - ID of the device to send to
+        + fromnumber: `+1-312-555-1212` (string, optional) - Phone number to display as the sender. Optional.
+        + base64body: SGVsbG8sIFdvcmxkIQo= (string) - Base64-encoded message body
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+
+## Group Account Management
+
+## Current User [/api/1/users/me]
+
+### Get user info [GET]
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (User)
+
+
+## User Account Balance [/api/1/users/me/balance]
+
+Requests to the user account balance endpoints are equivalent to calling the 
+[organization account balance endpoints](#reference/account-management/organization-account-balance) 
+with the personal organization.
+
+### Get current balance [GET /api/1/users/me/balance]
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Account Balance)
+
+### Add balance [POST /api/1/users/me/balance]
+
+Charge the user's configured billing source and add that amount to your account balance.
+
++ Request (application/json)
+
+    + Attributes
+        + addamount: 123.50 (number) - Amount to add to current user balance
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + order_data (Order Data)
+
+### Get balance history [GET /api/1/users/me/balancehistory]
+
+Retreive a history of transactions (credits and charges).
 
 + Response 200 (application/json)
 
@@ -101,1870 +617,170 @@ All fields supplied in the request are optional and are supported for filtering 
           "success": true,
           "data": [
             {
-                "id":"42",
-                "email":"joe@example.com",
-                "partnerid":"12",
-                "first":"Joe",
-                "last":"Example",
-                "role":"",
-                "registered":"2014-05-30 20:41:28",
-                "billingmethod":"1"
+              "id": 54345,
+              "userid": 477,
+              "orgid":
+              "time": "2016-04-26 20:31:42",
+              "description": "Charge to balance: Data plan for SIM 8944502211130209115",
+              "amount": "-3.95"
+            },
+            {
+              "id": 54311,
+              "userid": 477,
+              "time": "2016-04-26 20:30:45",
+              "description": "one hundred",
+              "amount": "100.00"
             }
           ]
         }
 
-### Create a new user [POST]
+## Organizations [/api/1/organizations/{orgid}]
 
-+ Request (application/x-www-form-urlencoded)
+Organizations allow multiple users to share access to the same devices and billing account.
+See the [guide](https://hologram.io/docs/guide/connect/organizations) for more information.
 
-        TBC
+### List organizations [GET /api/1/organizations]
 
-+ Response 200 (application/json)
+List all organizations that you are a member of. This includes the special "personal" 
+organization tied to your user.
 
-        {
-          "success": true,
-          "data": []
-        }
-
-## Individual User Account Details [/api/1/users/{userid}]
-Either a numerical userid or the keyword `me` must be supplied in the request URI.
-+ Parameters
-    + userid (required, number, `42`)
-        id of the user record to retrieve
-        + Values
-            + `me`
-            + `42`
-
-### Retrieve individual user account information [GET]
++ Response 200
+    + Attributes 
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Organization)
 
 + Response 200 (application/json)
 
         {
           "success": true,
-          "data": {
-                "id":"42",
-                "email":"joe@example.com",
-                "partnerid":"12",
-                "first":"Joe",
-                "last":"Example",
-                "role":"",
-                "registered":"2014-05-30 20:41:28",
-                "billingmethod":"1"
-            }
-        }
-
-## Individual User Password Details [/api/1/users/me/password]
-
-
-### Change User Password [POST]
-
-The following form fields are required in the POST body:
-- **password** (string, required, new password)
-
-+ Request (application/x-www-form-urlencoded)
-
-    password=lala
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": null
-}
-
-## Individual User Address Details [/api/1/users/me/addresses]
-
-### Retrieve Addresses [GET]
-
-On success, the response includes the following fields:
-- **id** (number, address id)
-- **userid** (number, user id)
-- **name** (string, user's name)
-- **line1** (string, line 1 of the address)
-- **line2** (string, line 2 of the address)
-- **city** (string)
-- **state** (string)
-- **zip** (string)
-- **country** (string)
-- **telephone** (string)
-- **notes** (string, any additional notes about the address)
-- **is_commercial** (bool, true if it is a commercial address)
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": [
-    {
-      "id": 43,
-      "userid": 477,
-      "name": "Reuben Balik",
-      "line1": "111 W Illinois St",
-      "line2": "",
-      "city": "Chicago",
-      "state": "IL",
-      "zip": "60654",
-      "country": "US",
-      "telephone": "7733396772",
-      "notes": "",
-      "is_commercial": 0
-    }
-  ]
-}
-
-## Individual User API Key Details [/api/1/users/me/apikey]
-
-
-### Retrieve API key [GET]
-
-On success, you will receive your API key.
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": {
-    "apikey": "qbeV4s9IPkHsR1234567890112456"
-  }
-}
-
-### Generate API Key [POST]
-
-On success, you will receive a newly generated API key.
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": {
-    "apikey": "qbeV4s9IPkHsR1234567890112456"
-  }
-}
-
-## Individual User Groups Details [/api/1/users/me/groups]
-
-### Retrieve User Groups [GET]
-
-On success, the response includes the following fields:
-- **id** (number, group id)
-- **name** (string, user group's name)
-- **groupkey** (string, group key)
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "somegroupname",
-      "groupkey": "P12345GYz16X"
-    }
-  ]
-}
-
-## Individual Balance Details [/api/1/users/me/balance]
-
-### Retrieve User Balance [GET]
-
-On success, the response includes the following fields:
-- **userid** (number, user id)
-- **balance** (number, user's current balance)
-- **promobalance** (number, user's promo balance)
-- **minbalance** (number, user's minimum balance)
-- **topoffamount** (number, top off amount for the user)
-- **pendingcharges** (number, pending charges)
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": {
-    "userid": 477,
-    "balance": "96.05",
-    "promobalance": "0.00",
-    "minbalance": "5.00",
-    "topoffamount": "0.00",
-    "pendingcharges": "0"
-  }
-}
-
-### Add Amount to Balance [POST]
-
-The following form fields are required in the POST body:
-- **addamount** (number, required, Amount to add to current user balance)
-
-On success, the response includes the following fields:
-- **order_data** (object, contains data regarding the activation of the phone number.)
-- **preview** (bool, true if it is in preview mode)
-- **sku** (string, sku of the product)
-- **unit_cost** (number, unit cost of ordered product)
-- **total_cost** (number, total cost of ordered product)
-- **description** (string, description of ordered product)
-- **extra_description** (string, extra description of ordered product)
-- **needs_shipping** (bool, true if product needs shipping)
-- **shipping_cost** (number, shipping cost)
-- **sales_tax** (number, sales tax for ordered product)
-
-+ Request (application/x-www-form-urlencoded)
-
-        addamount=123
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": null,
-  "order_data": {
-    "preview": false,
-    "sku": "ACCTREFILL",
-    "unit_cost": "123",
-    "total_cost": "123",
-    "description": "Refill Account Balance",
-    "extra_description": "User-purchased account refill",
-    "needs_shipping": false,
-    "shipping_cost": 0
-  }
-}
-
-## Individual Balance Parameter Details [/api/1/users/me/balanceparams]
-
-
-### Update Balance Parameters [POST]
-
-The following form fields are optional in the POST body:
-- **minbalance** (number, optional, minimum balance)
-- **topoffamount** (number, optional, top off amount for current user)
-
-On success, the response includes the following fields:
-- **userid** (number, user id)
-- **balance** (number, user's current balance)
-- **promobalance** (number, user's promo balance)
-- **minbalance** (number, user's minimum balance)
-- **topoffamount** (number, top off amount for the user)
-
-+ Request (application/x-www-form-urlencoded)
-
-        minbalance=11111
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": {
-    "userid": 477,
-    "balance": "219.05",
-    "promobalance": "0.00",
-    "minbalance": "11111.00",
-    "topoffamount": "0.00"
-  }
-}
-
-## Individual Balance History Details [/api/1/users/me/balancehistory]
-
-### Retrieve User Balance History [GET]
-
-On success, the response includes the following fields:
-- **id** (number, balance history id)
-- **userid** (number, user id)
-- **time** (string, timestamp of the balance)
-- **description** (string, description of the balance change)
-- **amount** (number)
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": [
-    {
-      "id": 2,
-      "userid": 477,
-      "time": "2016-04-26 20:31:42",
-      "description": "Charge to balance: Data plan for SIM 8944502211130209115",
-      "amount": "-3.95"
-    },
-    {
-      "id": 1,
-      "userid": 477,
-      "time": "2016-04-26 20:30:45",
-      "description": "one hundred",
-      "amount": "100.00"
-    }
-  ]
-}
-
-
-## Individual User Billing and Credit Card Details [/api/1/users/{userid}/billing]
-Either a numerical userid or the keyword `me` must be supplied in the request URI.
-+ Parameters
-    + userid (required, number, `42`)
-        id of the user whose billing details to retrieve
-        + Values
-            + `me`
-            + `42`
-
-### Retrieve individual user billing information [GET]
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "data": {
-            "id":"42",
-            "billingmethod":"1",
-            "cardset":true,
-            "card":{
-                    "last4":"9876",
-                    "issuer":"MasterCard",
-                    "expirationmonth":1,
-                    "expirationyear":2018,
-                    "country":"United States of America",
-                    "name":"Joe Example",
-                    "address1":"1 Beverly Way",
-                    "address2":"","city":"Beverly Hills",
-                    "state":"CA",
-                    "zip":"90210",
-                    "cvccheck":"pass",
-                    "addresscheck":"fail",
-                    "zipcheck":"pass"
-                }
-            }
-        }
-
-### Update individual user billing information [POST]
-+ Request (application/x-www-form-urlencoded)
-
-        TBC
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "data": {}
-        }
-
-## Individual User Billing Recent Charges [/api/1/users/{userid}/charges]
-Either a numerical userid or the keyword `me` must be supplied in the request URI.
-
-+ Parameters
-    + userid (required, number, `42`)
-        id of the user whose recent charges to retrieve
-        + Values
-            + `me`
-            + `42`
-
-### Retrieve individual user billing recent charges [GET]
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "data": {
-                "id":"43",
-                "billingmethod":"1",
-                "charges":[
-                    {
-                        "date":"2015-01-22",
-                        "amount":5,
-                        "description":"Charge for Order 91",
-                        "succeeded":true,
-                        "message":"",
-                        "refunded":false,
-                        "refund":0,
-                        "type":"MasterCard",
-                        "last4":"9876"
-                    },
-                    {
-                        "date":"2015-01-22",
-                        "amount":5,
-                        "description":"Charge for Order 89",
-                        "succeeded":false,
-                        "message":"Your card was declined.",
-                        "refunded":false,
-                        "refund":0,"type":"MasterCard",
-                        "last4":"9876"
-                    },
-                    {
-                        "date":"2014-08-21",
-                        "amount":8,
-                        "description":"Charge for Order 32",
-                        "succeeded":true,
-                        "message":"",
-                        "refunded":true,
-                        "refund":8,
-                        "type":"MasterCard",
-                        "last4":"9876"
-                    }
-                ]
-            }
-        }
-
-## Individual User Recent API Activity [/api/1/users/{userid}/activity]
-Either a numerical userid or the keyword `me` must be supplied in the request URI.
-+ Parameters
-    + userid (required, number, `42`)
-        id of the user whose recent charges to retrieve
-        + Values
-            + `me`
-            + `42`
-
-### Retrieve individual user recent API activity [GET]
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "data": {
-            "id":42,
-            "events":[
-                {
-                    "eventid":"20253",
-                    "timestamp":"2015-02-04 01:17:23",
-                    "description":"1\/users\/me\/activity",
-                    "method":"GET",
-                    "sent":""
-                },
-                {
-                    "eventid":"20252",
-                    "timestamp":"2015-02-04 01:10:05",
-                    "description":"1\/users\/me\/charges",
-                    "method":"GET",
-                    "sent":""
-                },
-                {
-                    "eventid":"20251",
-                    "timestamp":"2015-02-04 01:07:05",
-                    "description":"1\/users\/me\/billing",
-                    "method":"POST",
-                    "sent":"MASKED"
-                }
-            ]
-        }
-
-# Group Device Data Plans
-
-## Device Data Plans [/api/1/plans/]
-
-### List plans [GET]
-All fields supplied in the request are optional and are supported for filtering results.
-
-+ Request (application/x-www-form-urlencoded)
-
-        TBC
-
-+ Response 200 (application/json)
-
-        {
-            "success":true,
-            "data":[
-                {
-                    "id":73,
-                    "partnerid":12,
-                    "name":"1MB",
-                    "description":"1 MB of data per month",
-                    "data":1000000,
-                    "recurring":1,
-                    "enabled":1,
-                    "amount1":3,
-                    "amount2":4,
-                    "amount3":5,
-                    "amount4":6,
-                    "amount5":7,
-                    "billingperiod":1,
-                    "overage1":0.1,
-                    "overage2":0.2,
-                    "overage3":0.3,
-                    "overage4":0.4,
-                    "overage5":0.5,
-                    "sms1":0.2,
-                    "sms2":0.3,
-                    "sms3":0.4,
-                    "sms4":0.5,
-                    "sms5":0.65,
-                    "trialdays":30,
-                    "templateid":13,
-                    "carrierid":2,
-                    "groupid":0
-                },
-                {
-                    "id": 79,
-                    "partnerid": 1,
-                    "name": "PAYG",
-                    "description": "",
-                    "data": 0,
-                    "recurring": 1,
-                    "enabled": 1,
-                    "amount1": "0.40",
-                    "amount2": "0.40",
-                    "amount3": "-1.00",
-                    "amount4": "-1.00",
-                    "amount5": "-1.00",
-                    "billingperiod": 1,
-                    "overage1": "0.60",
-                    "overage2": "0.85",
-                    "overage3": "-1.00",
-                    "overage4": "-1.00",
-                    "overage5": "-1.00",
-                    "sms1": "0.19",
-                    "sms2": "0.30",
-                    "sms3": "-1.00",
-                    "sms4": "-1.00",
-                    "sms5": "-1.00",
-                    "trialdays": 0,
-                    "templateid": 0,
-                    "carrierid": 3,
-                    "groupid": 0
-                },
-                {
-                    "id": 77,
-                    "partnerid": 1,
-                    "name": "1 MB + 30-day Free Trial",
-                    "description": "",
-                    "data": 1000000,
-                    "recurring": 1,
-                    "enabled": 1,
-                    "amount1": "0.97",
-                    "amount2": "1.19",
-                    "amount3": "-1.00",
-                    "amount4": "-1.00",
-                    "amount5": "-1.00",
-                    "billingperiod": 1,
-                    "overage1": "1.00",
-                    "overage2": "1.00",
-                    "overage3": "0.00",
-                    "overage4": "0.00",
-                    "overage5": "0.00",
-                    "sms1": "0.19",
-                    "sms2": "0.19",
-                    "sms3": "-1.00",
-                    "sms4": "-1.00",
-                    "sms5": "-1.00",
-                    "trialdays": 30,
-                    "templateid": 0,
-                    "carrierid": 3,
-                    "groupid": 0
-                },
-            ]
-        }
-
-## Individual Device Data Plan Details [/api/1/plans/{planid}]
-A numerical plan ID must be supplied in the request URI.
-+ Parameters
-    + planid (required, number, `146`)
-        id of the device data plan whose details to retrieve
-
-### Retrieve individual device data plan details [GET]
-
-+ Response 200 (application/json)
-
-        {
-        "success": true,
-        "data": [
-        {
-          "id": 146,
-          "partnerid": 12,
-          "name": "20 MB",
-          "description": "",
-          "data": 20000000,
-          "recurring": 1,
-          "enabled": 1,
-          "amount1": "5.99",
-          "amount2": "12.99",
-          "amount3": "-1.00",
-          "amount4": "-1.00",
-          "amount5": "-1.00",
-          "billingperiod": 1,
-          "overage1": "1.00",
-          "overage2": "1.50",
-          "overage3": "-1.00",
-          "overage4": "-1.00",
-          "overage5": "-1.00",
-          "sms1": "0.19",
-          "sms2": "0.30",
-          "sms3": "-1.00",
-          "sms4": "-1.00",
-          "sms5": "-1.00",
-          "trialdays": 0,
-          "templateid": 0,
-          "carrierid": 2,
-          "groupid": 0
-        }
-      ]
-        }
-
-# Group Devices
-
-## Devices [/api/1/devices/{?userid|sim|phone|name}]
-
-### List devices [GET]
-All fields supplied in the request are optional and are supported for filtering results.
-+ Parameters
-    + userid (optional, number, `42` )
-        id of the user whose devices' information to retrieve (the `me` keyword is not supported)
-        (Note that for normal users, they will only see their devices by default and can leave this off)
-    + sim (optional, number, `99999900000000123` )
-        Only show device that has attached SIM with given number
-    + phone (optional, string, `+17735550101` )
-        Only show device that has the given phone number assigned to it
-    + name (optional, string, `Test Device` )
-        Filter devices based on name
-
-
-
-+ Response 200 (application/json)
-
-        {
-            "success": true,
-            "data": [
+          "data": [
             {
-                "id": 156,
-                "userid": 458,
-                "name": "Unnamed Device (25888)",
-                "whencreated": "2015-06-10 00:15:54",
-                "phonenumber": "",
-                "tags": [],
-                "links": {
-                    "cellular": [
-                        {
-                            "id": 1234,
-                            "sim": "99990000000012345678",
-                            "imsi": 000000001234567,
-                            "carrierid": 2,
-                            "dataplansubscriptionid": 75,
-                            "databonusplansubscriptionid": 0,
-                            "tier": 1,
-                            "whenclaimed": "2015-06-10 00:15:54",
-                            "whenexpires": "2015-07-10 00:15:54",
-                            "cur_billing_data_used": "1187150",
-                            "apn": "apn.konekt.io (no user, no pw)",
-                            "state": "LIVE",
-                            "overagelimit": -1
-                        }
-                    ]
+              "id": 5678,
+              "name": "Smart Things LLC",
+              "is_personal": 0,
+              "ownerid": 1234,
+              "users": [
+                {
+                  "id": 1234,
+                  "permissions": [
+                    "billing",
+                    "activation",
+                    "changeplan"
+                  ],
+                  "first": "Joe",
+                  "last": "Data",
+                  "email": "joe@example.com"
                 }
+              ],
+              "pending": []
             },
             {
-                "id": 80,
-                "userid": 477,
-                "name": "Unnamed Device",
-                "type": "Unknown",
-                "whencreated": "2016-04-26 18:42:55",
-                "phonenumber": "",
-                "tags": [],
-                "links": {
-                    "cellular": []
+              "id": 2223,
+              "name": "joe@example.com",
+              "is_personal": 1,
+              "ownerid": 1234,
+              "users": [
+                {
+                  "id": 1234,
+                  "permissions": [
+                    "billing",
+                    "activation",
+                    "changeplan"
+                  ],
+                  "first": "Joe",
+                  "last": "Data",
+                  "email": "joe@example.com"
                 }
-            },
-            {
-                "id": 79,
-                "userid": 477,
-                "name": "Unnamed Device",
-                "type": "Unknown",
-                "whencreated": "2016-04-26 18:42:11",
-                "phonenumber": "",
-                "tags": [],
-                "links": {
-                    "cellular": []
-                }
-            },
-            {
-                "id": 78,
-                "userid": 477,
-                "name": "Unnamed Device",
-                "type": "Unknown",
-                "whencreated": "2016-04-26 18:42:08",
-                "phonenumber": "",
-                "tags": [],
-                "links": {
-                    "cellular": []
-                }
-            },
-            {
-                "id": 77,
-                "userid": 477,
-                "name": "Unnamed Device",
-                "type": "Unknown",
-                "whencreated": "2016-04-18 17:49:29",
-                "phonenumber": "",
-                "tags": [],
-                "links": {
-                    "cellular": []
-                }
+              ],
+              "pending": []
             }
-        ]
+          ]
         }
 
-## Individual Device Details [/api/1/devices/{deviceid}]
-A numerical device ID must be supplied in the request URI.
+### Get an organization [GET /api/1/organizations/{orgid}]
+
 + Parameters
-    + deviceid (required, number, `1234`)
-        id of the device whose details to retrieve
+    + orgid: 4321 (number) - The organization's unique identifier
 
-### Retrieve individual device information [GET]
-
-+ Response 200 (application/json)
-
-        {
-            "success": true,
-            "data": {
-                "id": 156,
-                "userid": 458,
-                "name": "Unnamed Device (25888)",
-                "whencreated": "2015-06-10 00:15:54",
-                "phonenumber": "",
-                "tags": [],
-                "links": {
-                    "cellular": [
-                        {
-                            "id": 1234,
-                            "sim": "99990000000012345678",
-                            "imsi": 000000001234567,
-                            "carrierid": 2,
-                            "dataplansubscriptionid": 75,
-                            "databonusplansubscriptionid": 0,
-                            "tier": 1,
-                            "whenclaimed": "2015-06-10 00:15:54",
-                            "whenexpires": "2015-07-10 00:15:54",
-                            "cur_billing_data_used": "1187150",
-                            "apn": "apn.konekt.io (no user, no pw)",
-                            "state": "LIVE",
-                            "overagelimit": -1
-                        }
-                    ]
-                }
-            }
-        }
-
-
-## Device Claiming and Activation [/api/1/links/cellular/sim_{simnumber}/claim]
-A numerical SIM number (located on the physical SIM card) must be supplied in the request URI.
-+ Parameters
-    + simnumber (required, number, `99990000000012345678`)
-        number located on the SIM card that specifies the SIM card to activate
-
-### Claim ownership of and activate an individual device [POST]
-Note: This action cannot be completed without first having valid billing information on file for the device owner.
-
-Both **plan** and **tier** form fields must be supplied with values in the POST body. The value supplied for the plan field should be a planid (see: Device Data Plans).  The value for the tier field should be in the range from between 1 and 5 (inclusive), and represents which geographic regions (Tiers 1 through 5, respectively) within which the device will be allowed to be used. Higher tier values incur higher costs.
-
-+ Request (application/x-www-form-urlencoded)
-
-        plan=73&tier=1
++ Response 200
+    + Attributes 
+        + success: true (boolean) - Was the request successful?
+        + data (Organization)
 
 + Response 200 (application/json)
 
         {
           "success": true,
           "data": {
-            "id": 1234,
-            "sim": "99990000000012345678"
+            "id": 5678,
+            "name": "Smart Things LLC",
+            "is_personal": 0,
+            "ownerid": 1234,
+            "users": [
+              {
+                "id": 1234,
+                "permissions": [
+                  "billing",
+                  "activation",
+                  "changeplan"
+                ],
+                "first": "Joe",
+                "last": "Data",
+                "email": "joe@example.com"
+              }
+            ],
+            "pending": []
           }
         }
 
-## Device Phone Numbers [/api/1/devices/{deviceid}/addnumber?{preview}]
-A numerical device ID must be supplied in the request URI.
-+ Parameters
-    + deviceid (required, number, `1234`)
-        id of the device whose phone number to view or modify
-    + preview (optional, number, `1`)
-        if set to `1` and supplied, will return cost (if any) of performing the operation WITHOUT actually performing i
+## Organization Account Balance [/api/1/organizations/{orgid}/balance]
 
-### Purchase and Assign Phone Number to Device [POST]
-Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
-
-The following form fields are required in the POST body:
-- **country** (string, required, two-letter country code for the phone number)
-
-The following form fields are optional in the POST body and are only applicable to phone numbers in the US/Canada:
-- **areacode** (number, optional, area code to search in for phone number)
-
-On success, the response includes the following fields:
-- **order_data** (object, contains data regarding the activation of the phone number.)
-- **preview** (bool, true if it is in preview mode)
-- **sku** (string, sku of the product)
-- **unit_cost** (number, unit cost of ordered product)
-- **total_cost** (number, total cost of ordered product)
-- **description** (string, description of ordered product)
-- **extra_description** (string, extra description of ordered product)
-- **needs_shipping** (bool, true if product needs shipping)
-- **shipping_cost** (number, shipping cost)
-- **sales_tax** (number, sales tax for ordered product)
-
-+ Request (application/x-www-form-urlencoded)
-
-        country=US&areacode=703
+### Get current balance [GET /api/1/organizations/{orgid}/balance]
 
 + Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Account Balance)
 
-   {
-     "success": true,
-     "data": null,
-     "order_data": {
-       "preview": true,
-       "sku": "NUM",
-       "unit_cost": "1.00",
-       "total_cost": "1.00",
-       "description": "Phone number activation (US)",
-       "extra_description": "",
-       "needs_shipping": false,
-       "shipping_cost": 0,
-       "sales_tax": 0
-     }
-   }
+### Add balance [POST /api/1/organizations/{orgid}/balance]
 
-## Device Ordering [/api/1/orders/]
-
-### Place a Device Order [POST]
-Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
-
-+ Parameters
-    + preview (optional, number, `1`)
-        if set to `1` and supplied, will return cost (if any) of performing the operation WITHOUT actually performing it. This will not result in an actual order, which can be helpful if you're getting accustomed to the API and testing out your application.
-
-The following form fields are required in the POST body:
-- **productid** (number, required, must be greater than 0)
-- **optionid** (number, required if productid has options, must be greater than 0)
-
-The following form fields are optional in the POST body:
-- **shipping** (object, optional, contains the recipient name, address etc. for the particular order)
-- **name** (string, optional, recipient name)
-- **line1** (string, optional, line 1 of shipping address)
-- **city** (string, optional)
-- **state** (string, optional)
-- **country** (string, optional)
-- **zip** (number, optional)
-- **telephone** (number, optional)
-
-On success, the response includes the following fields:
-- **order_data** (object, order data)
-- **preview** (bool, if API call is in preview mode)
-- **sku** (string, the sku of the product)
-- **unit_cost** (number, the unit cost of the ordered product)
-- **discount** (number, the discount applied to the ordered product)
-- **total_cost** (number, the total cost of the ordered product)
-- **description** (string, product description)
-- **extra_description** (string, extra product description)
-- **quantity** (number, quantity ordered)
-- **preorder_details** (string, preorder details)
-- **needs_shipping** (bool, true if product requires shipping)
-- **free_shipping** (bool, true if shipping is free)
-- **shipping_cost** (number, shipping cost)
-- **sales_tax** (number, sales tax applied)
+Charge the organization's configured billing source and add that amount to the account balance
 
 + Request (application/json)
 
-    {
-        "productid":1,
-        "optionid":1,
-        "shipping" : {
-            "name" : "someName",
-            "line1" : "something W Illinois St",
-            "city" : "Chicago",
-            "state" : "IL",
-            "country" : "US",
-            "zip" : "60654",
-            "telephone" : "1234567890"
-        }
-
-    }
+    + Attributes
+        + addamount: 123.50 (number) - Amount to add to current user balance
 
 + Response 200 (application/json)
 
-    {
-      "success": true,
-      "data": null,
-      "order_data": {
-        "preview": true,
-        "sku": "SIM-N2-2FF3FF",
-        "unit_cost": 5,
-        "discount": 0,
-        "total_cost": 5,
-        "description": "SIM Card",
-        "extra_description": "Global SIM Card[Combo Mini/Micro SIM]",
-        "quantity": 1,
-        "preorder_details": "",
-        "needs_shipping": true,
-        "free_shipping": false,
-        "shipping_cost": 5.85,
-        "sales_tax": 1.11
-      }
-    }
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + order_data (Order Data)
 
-# Group SMS
+### Get balance history [GET /api/1/organizations/{orgid}/balancehistory]
 
-## Incoming SMS to Device [/api/1/sms/incoming]
-Device-terminated SMS (DT SMS), also known as mobile-terminated SMS (MT SMS), refers to Short Messaging Service messages sent to devices.
-
-### Send an SMS to a Device [POST]
-Note: This action cannot be completed without first having valid billing information on file for the authenticated user account.
-
-Circuit-switched DT SMS is only possible with cellular devices. Currently, only circuit-switched SMS is supported for DT SMS (DT SMS-over-IP is planned for support in the future).
-
-Note: All telephone numbers are specified using E.164 formatting.
-
-One of the following form fields are required in the POST body to identify the recipient device (only one of the following fields may be supplied):
-- **deviceid** (number, required, id of the recipient device)
-- **phonenumber** (string, required, phone number of the recipient device if the device has already been assigned a phone number)
-- **deviceids** (array of deviceid entries, used for sending SMS to multiple devices simultaneously)
-
-One of the following form fields are required in the POST body to provide the contents of the message (only one of these fields may be included):
-- **body** (string, required, ASCII text representation of the SMS body)
-- **base64body** (string, required, a base64-encoded representation of the SMS body)
-
-+ Request (application/x-www-form-urlencoded)
-
-        deviceid=1234&body=Hello%20World!
+Retrieve a history of transactions (credits and charges).
 
 + Response 200 (application/json)
 
         {
           "success": true,
-          "data": null
-        }
-
-+ Request (application/x-www-form-urlencoded)
-
-        deviceids[]=1234&deviceids[]=1235&deviceids[]=1236&body=Hello%20World!
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "data": null
-        }
-
-## Outgoing SMS to Mobile Phone Number [/api/1/sms/outgoing]
-Our platform enables outgoing SMS from either a device or from a web application.
-
-For applications involving devices: Device-originated SMS (DO SMS), also known as mobile-originated SMS (MO SMS), refers to Short Messaging Service messages sent from devices to mobile telephone numbers anywhere in the world. We support DO SMS via our REST API (as described in this section), as well as SMS-over-IP via a low-level TCP/IP socket interface.
-
-Note: All telephone numbers are specified using E.164 formatting.
-
-### Send an SMS to a Mobile Telephone Number [POST]
-Note: This action cannot be completed without first having valid billing information on file for the authenticated user account AND having purchased and assigned a phone number to a device.
-
-One of the following form fields are required in the POST body to identify the source device (only one of the following fields may be supplied):
-- **deviceid** (number, required, id of the source device)
-- **phonenumber** (string, required, phone number of the source device if the device has already been assigned a phone number)
-
-The following form fields are required in the POST body to identify the destination device (only one of the following fields may be supplied):
-- **destinationphonenumber** (string, required, phone number of the recipient device)
-
-One of the following form fields are required in the POST body to provide the contents of the message (only one of these fields may be included):
-- **body** (string, required, ASCII text representation of the SMS body)
-- **base64body** (string, required, a base64-encoded representation of the SMS body)
-
-+ Request (application/x-www-form-urlencoded)
-
-        deviceid=1234&destinationphonenumber=%2B15555551212body=Hello%20World!
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "data": null
-        }
-
-# Group Cloud Services Router
-
-## Retrieving CSR Real-time Data Monitor [/api/1/csr/rdm]
-
-### List RDM [GET]
-
-On success, the response includes the following fields:
-- **data** (list of objects, data)
-- **id** (number, rdm id)
-- **logged** (string, the date at which it was logged)
-- **deviceid** (number, device id)
-- **data** (string, data stored)
-- **tags** (list of strings, topics (formerly called tags) associated with the rdm)
-
-+ Response 200 (application/json)
-
-    {
-      "success": true,
-      "continues": false,
-      "data": [
-        {
-          "id": 14,
-          "logged": "2015-04-09 15:59:59",
-          "deviceid": 77,
-          "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestB\"],\"data\":\"dGVzdGRhdGEx\"}",
-          "record_id": "8e274992-cf84-11e5-a67e-bc764e20b516",
-          "tags": [
-            "TestB",
-            "TestXYZ"
-          ]
-        },
-        {
-          "id": 13,
-          "logged": "2015-04-08 21:05:42",
-          "deviceid": 1,
-          "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
-          "record_id": "8e2748e7-cf84-11e5-a67e-bc764e20b516",
-          "tags": [
-            "TestD",
-            "TestXYZ"
-          ]
-        },
-        {
-          "id": 12,
-          "logged": "2015-04-08 21:03:22",
-          "deviceid": 1,
-          "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
-          "record_id": "8e274838-cf84-11e5-a67e-bc764e20b516",
-          "tags": [
-            "TestXYZ",
-            "TestD"
-          ]
-        },
-        {
-          "id": 10,
-          "logged": "2015-04-07 22:05:02",
-          "deviceid": 1,
-          "data": "{\"source\":\"somesource\",\"tags\":[\"TestA\",\"TestE\"],\"data\":\"dGVzdGRhdGEx\"}",
-          "record_id": "8e274787-cf84-11e5-a67e-bc764e20b516",
-          "tags": [
-            "TestA",
-            "TestE"
-          ]
-        },
-        {
-          "id": 9,
-          "logged": "2015-04-07 22:04:30",
-          "deviceid": 1,
-          "data": "{\"source\":\"somesource\",\"tags\":[\"TestA\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
-          "record_id": "8e2746c9-cf84-11e5-a67e-bc764e20b516",
-          "tags": [
-            "TestA",
-            "TestD"
-          ]
-        },
-        {
-          "id": 8,
-          "logged": "2015-04-07 21:36:35",
-          "deviceid": 1,
-          "data": "{\"source\":\"somesource\",\"tags\":[\"TestA\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
-          "record_id": "8e274607-cf84-11e5-a67e-bc764e20b516",
-          "tags": [
-            "TestA",
-            "TestD"
-          ]
-        },
-        {
-          "id": 5,
-          "logged": "2015-03-19 18:08:45",
-          "deviceid": 1,
-          "data": "{\"source\":\"asdf\",\"tags\":[],\"data\":\"VGVzdGluZw==\"}",
-          "record_id": "8e2744d4-cf84-11e5-a67e-bc764e20b516",
-          "tags": []
-        },
-        {
-          "id": 4,
-          "logged": "2015-03-19 18:08:45",
-          "deviceid": 1,
-          "data": "{\"source\":\"asdf\",\"tags\":[],\"data\":\"VGVzdGluZw==\"}",
-          "record_id": "8e274336-cf84-11e5-a67e-bc764e20b516",
-          "tags": []
-        }
-      ]
-    }
-
-## Single CSR Real-time Data Monitor [/api/1/csr/rdm/{id}]
-
-+ Parameters
-    + id (required, number, `4`)
-        Will only return the result that matches the record id if it is supplied.
-
-### Retrieve RDM by id [GET]
-
-+ Response 200 (application/json)
-
-    {
-        "success": true,
-            "data": {
-                "id": 4,
-                "logged": "2015-03-19 18:08:45",
-                "deviceid": 1,
-                "data": "{\"source\":\"asdf\",\"tags\":[],\"data\":\"VGVzdGluZw==\"}",
-                "record_id": "8e274336-cf84-11e5-a67e-bc764e20b516",
-                "tags": []
-            }
-    }
-
-## Creating RDM [/api/1/csr/rdm/]
-
-### Create RDM [POST]
-
-
-The following form fields are required in the POST body:
-- **deviceid** (number, required, the device id)
-- **data** (string, required, data that is going to be stored)
-
-+ Request (application/x-www-form-urlencoded)
-
-        deviceid=77
-
-+ Response 200 (application/json)
-    {
-        "success" : true
-    }
-
-
-## CSR Topics (formerly Tags) [/api/1/csr/tags]
-
-On success, the response includes the following fields:
-- **data** (list of topics/tags)
-
-### List CSR Topics [GET]
-
-+ Response 200 (application/json)
-    {
-      "success": true,
-      "data": [
-        "Tag100",
-        "Tag200",
-        "Tag2001",
-        "Test1",
-        "Test2",
-        "TestA",
-        "TestB",
-        "TestD",
-        "TestE",
-        "TestXYZ"
-      ]
-    }
-
-## CSR Apps [/api/1/csr/apps]
-
-### List CSR Apps [GET]
-
-+ Response 200 (application/json)
-
-    {
-      "success": true,
-      "data": [
-        {
-          "id": 1,
-          "partnerid": 0,
-          "name": "Email",
-          "description": "Send an email containing the CSR JSON object",
-          "userpropertieslist": [
+          "data": [
             {
-              "property": "recipients",
-              "name": "Email recipients",
-              "description": "Comma-separated list of email addresses",
-              "mandatory": true
+              "id": 54345,
+              "userid": 477,
+              "orgid":
+              "time": "2016-04-26 20:31:42",
+              "description": "Charge to balance: Data plan for SIM 8944502211130209115",
+              "amount": "-3.95"
             },
             {
-              "property": "subject",
-              "name": "Subject",
-              "description": "Email subject",
-              "mandatory": true
+              "id": 54311,
+              "userid": 477,
+              "time": "2016-04-26 20:30:45",
+              "description": "one hundred",
+              "amount": "100.00"
             }
           ]
         }
-      ]
-    }
-
-## Retrieving CSR App by id [/api/1/csr/apps/{id}]
-
-+ Parameters
-  + id (required, number, `1`)
-    Will only return the result that matches the app id if it is supplied.
-
-### Retrieve single CSR App by id [GET]
-
-+ Response 200 (application/json)
-
-  {
-    "success": true,
-    "data": {
-      "id": 1,
-      "partnerid": 0,
-      "name": "Email",
-      "description": "Send an email containing the CSR JSON object",
-      "userpropertieslist": [
-        {
-          "property": "recipients",
-          "name": "Email recipients",
-          "description": "Comma-separated list of email addresses",
-          "mandatory": true
-        },
-        {
-          "property": "subject",
-          "name": "Subject",
-          "description": "Email subject",
-          "mandatory": true
-        }
-      ]
-    }
-  }
-
-
-## CSR Sources [/api/1/sources/]
-
-
-### List CSR Sources [GET]
-
-+ Response 200 (application/json)
-
-    {
-      "success": true,
-      "data": [
-        {
-          "id": 12,
-          "userid": 395,
-          "deviceid": 46,
-          "sharedkey": 945112124,
-          "sharedid": 1631022658
-        },
-        {
-          "id": 11,
-          "userid": 395,
-          "deviceid": 46,
-          "sharedkey": 1266043705,
-          "sharedid": 1464682875
-        },
-        {
-          "id": 10,
-          "userid": 395,
-          "deviceid": 46,
-          "sharedkey": 1265136212,
-          "sharedid": 776547393
-        },
-        {
-          "id": 9,
-          "userid": 426,
-          "deviceid": 17,
-          "sharedkey": 2104503649,
-          "sharedid": 1212305729
-        },
-        {
-          "id": 8,
-          "userid": 426,
-          "deviceid": 17,
-          "sharedkey": 1700100216,
-          "sharedid": 1968459342
-        },
-        {
-          "id": 7,
-          "userid": 426,
-          "deviceid": 17,
-          "sharedkey": 1852076144,
-          "sharedid": 2002276946
-        },
-        {
-          "id": 6,
-          "userid": 426,
-          "deviceid": 17,
-          "sharedkey": 779255165,
-          "sharedid": 557926986
-        },
-        {
-          "id": 5,
-          "userid": 426,
-          "deviceid": 17,
-          "sharedkey": 1363174757,
-          "sharedid": 558911568
-        },
-        {
-          "id": 4,
-          "userid": 426,
-          "deviceid": 17,
-          "sharedkey": 1064000090,
-          "sharedid": 1143682871
-        },
-        {
-          "id": 3,
-          "userid": 426,
-          "deviceid": 17,
-          "sharedkey": 728448317,
-          "sharedid": 1984392300
-        },
-        {
-          "id": 2,
-          "userid": 426,
-          "deviceid": 2,
-          "sharedkey": 1465801049,
-          "sharedid": 1397579101
-        }
-      ]
-    }
-
-
-### Retrieve Single CSR Source [/api/1/sources/{id}]
-
-+ id (required, number, `12`)
-    Will only return the result that matches the rule id if it is supplied.
-
-+ Response 200 (application/json)
-    {
-      "success": true,
-      "data": {
-        "id": 12,
-        "userid": 395,
-        "deviceid": 46,
-        "sharedkey": 945112124,
-        "sharedid": 1631022658
-      }
-    }
-
-## CSR Rules [/api/1/rules]
-
-
-### List CSR Rules [GET]
-
-+ Response 200 (application/json)
-
-    {
-      "success": true,
-      "data": [
-        {
-          "id": 5,
-          "userid": 426,
-          "partnerid": 1,
-          "enabled": 1,
-          "csrappid": 1,
-          "userproperties": "{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
-          "hidden": 0,
-          "tags": [
-            "TestB",
-            "Test2"
-          ]
-        },
-        {
-          "id": 4,
-          "userid": 426,
-          "partnerid": 1,
-          "enabled": 1,
-          "csrappid": 1,
-          "userproperties": "{\"recipients\":\"asdf@gmail.com\",\"subject\":\"asdf\"}",
-          "hidden": 0,
-          "tags": [
-            "Tag100",
-            "Tag2001"
-          ]
-        }
-      ]
-    }
-
-## Retrieving CSR Rule by id [/api/1/rules/{id}]
-
-### Retrieve CSR Rule [GET]
-
-+ Parameters
-  + id (required, number, `5`)
-      Will only return the result that matches the rule id if it is supplied.
-
-
-### Delete CSR Rule [DELETE]
-
-
-+ Response 200 (application/json)
-
-    {
-        "success":true
-    }
-
-## Creating CSR Rule [/api/1/rules/]
-
-### Create CSR Rule [POST]
-
-The following form fields are required in the POST body:
-- **csrappid** (number, required, must be greater than 0)
-- **userproperties** (string, user properties)
-- **tags** (string, required, topics (formerly called tags) for the new CSR rule)
-
-On success, the response includes the following fields:
-- **data** (object, data associated with the updated CSR rule)
-- **id** (number, CSR rule id)
-- **userid** (number, user's id)
-- **partnerid** (number, partner id)
-- **enabled** (bool, true if CSR rule is enabled)
-- **csrappid** (number, the CSR App id)
-- **userproperties** (string, the user properties string that was returned)
-- **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, topics (formerly called tags) associated with the CSR rule)
-
-+ Request (application/json)
-
-{
-    "csrappid":1,
-    "userproperties":"{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
-    "tags": [
-            "Tag100",
-            "Tag2001"
-          ]
-}
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": {
-    "id": 9,
-    "userid": 477,
-    "partnerid": 1,
-    "enabled": 1,
-    "csrappid": 1,
-    "userproperties": "{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
-    "hidden": 0,
-    "tags": [
-      "Tag100",
-      "Tag2001"
-    ]
-  }
-}
-
-
-## Updating CSR Rule [/api/1/rules/{id}]
-
-+ Parameters
-    + id (required, number, `9`)
-        Will only return the result that matches the rule id if it is supplied.
-
-### Update CSR Rule [PUT]
-
-
-The following form fields are optional in the POST body and are only applicable to phone numbers in the US/Canada:
-- **csrappid** (number, required, must be greater than 0)
-- **userproperties** (string, user properties)
-- **tags** (list of strings, required, topics (formerly called tags) for the new CSR rule)
-
-On success, the response includes the following fields:
-- **data** (object, data associated with the updated CSR rule)
-- **id** (number, CSR rule id)
-- **userid** (number, user's id)
-- **partnerid** (number, partner id)
-- **enabled** (bool, true if CSR rule is enabled)
-- **csrappid** (number, the CSR App id)
-- **userproperties** (string, the user properties string that was returned)
-- **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, topics (formerly called tags) associated with the CSR rule)
-
-+ Request (application/json)
-
-{
-    "csrappid":1,
-    "tags": [
-            "Tag100",
-            "Tag1111"
-          ]
-}
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": {
-    "id": 9,
-    "userid": 477,
-    "partnerid": 1,
-    "enabled": 1,
-    "csrappid": 1,
-    "userproperties": "{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
-    "hidden": 0,
-    "tags": [
-      "Tag100",
-      "Tag1111"
-    ]
-  }
-}
-
-## Enabling CSR Rule [/api/1/rules/{id}/enable/]
-
-+ Parameters
-    + id (required, number, '9')
-        Will only return the result that matches the rule id if it supplied.
-
-### Enable CSR Rule [POST]
-
-On success, the response includes the following fields:
-- **data** (object, data associated with the updated CSR rule)
-- **id** (number, CSR rule id)
-- **userid** (number, user's id)
-- **partnerid** (number, partner id)
-- **enabled** (bool, true if CSR rule is enabled)
-- **csrappid** (number, the CSR App id)
-- **userproperties** (string, the user properties string that was returned)
-- **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, topics (formerly called tags) associated with the CSR rule)
-
-
-+ Response 200 (application/json)
-{
-  "success": true,
-  "data": [
-    {
-      "id": 9,
-      "userid": 477,
-      "partnerid": 1,
-      "enabled": 1,
-      "csrappid": 1,
-      "userproperties": "{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
-      "hidden": 0,
-      "tags": [
-        "Tag100",
-        "Tag11111"
-      ]
-    }
-  ]
-}
-
-## Disabling CSR Rule [/api/1/rules/{id}/disable/]
-
-+ Parameters
-    + id (required, number, '9')
-        Will only return the result that matches the rule id if it supplied.
-
-### Disable CSR Rule [POST]
-
-On success, the response includes the following fields:
-- **data** (object, data associated with the updated CSR rule)
-- **id** (number, CSR rule id)
-- **userid** (number, user's id)
-- **partnerid** (number, partner id)
-- **enabled** (bool, true if CSR rule is enabled)
-- **csrappid** (number, the CSR App id)
-- **userproperties** (string, the user properties string that was returned)
-- **hidden** (bool, true if it is hidden)
-- **tags** (list of strings, topics (formerly called tags) associated with the CSR rule)
-
-
-+ Response 200 (application/json)
-{
-  "success": true,
-  "data": [
-    {
-      "id": 9,
-      "userid": 477,
-      "partnerid": 1,
-      "enabled": 0,
-      "csrappid": 1,
-      "userproperties": "{\"recipients\":\"asdfd@gmail.com\",\"subject\":\"asdf\"}",
-      "hidden": 0,
-      "tags": [
-        "Tag100",
-        "Tag11111"
-      ]
-    }
-  ]
-}
-
-# Group Links
-
-## Cellular Links [/api/1/links/cellular]
-
-### Retrieve Cellular Links [GET]
-
-On success, the response includes the following fields:
-- **id** (number, cellular link id)
-- **deviceid** (number, device id)
-- **devicename** (string, name of the device)
-- **userid** (number, user's id)
-- **partnerid** (number, partner id)
-- **sim** (string, SIM card number)
-- **msisdn** (string)
-- **imsi** (string, imsi)
-- **dataplansubscriptionid** (number, data plan subscription id)
-- **tier** (number, tier)
-- **carrier** (number, carrier id)
-- **state** (string, device state)
-- **whenclaimed** (string, when was the SIM number claimed)
-- **whenexpires** (string)
-- **whencreated** (string)
-- **overagelimit** (number)
-- **priv_ip_address** (string, private IP address)
-- **apn** (string)
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": [
-    {
-      "id": 37,
-      "deviceid": 0,
-      "devicename": null,
-      "userid": null,
-      "partnerid": 0,
-      "sim": "99900001",
-      "msisdn": "1111111",
-      "imsi": 1000001,
-      "dataplansubscriptionid": 0,
-      "tier": 0,
-      "carrier": 1,
-      "state": "LIVE",
-      "whenclaimed": "0000-00-00 00:00:00",
-      "whenexpires": "0000-00-00 00:00:00",
-      "whencreated": "2016-05-02 14:59:53",
-      "overagelimit": -1,
-      "priv_ip_address": "0.0.0.0",
-      "apn": "test"
-    }
-  ]
-}
-
-
-## Individual Cellular Link [/api/1/links/cellular/{id}]
-
-+ Parameters
-    + id (required, number, '37')
-        Will only return the result that matches the cellular link id if it supplied.
-
-### Retrieve Cellular Links by id [GET]
-
-On success, the response includes the following fields:
-- **id** (number, cellular link id)
-- **deviceid** (number, device id)
-- **devicename** (string, name of the device)
-- **userid** (number, user's id)
-- **partnerid** (number, partner id)
-- **sim** (string, SIM card number)
-- **msisdn** (string)
-- **imsi** (string, imsi)
-- **dataplansubscriptionid** (number, data plan subscription id)
-- **tier** (number, tier)
-- **carrier** (number, carrier id)
-- **state** (string, device state)
-- **whenclaimed** (string, when was the SIM number claimed)
-- **whenexpires** (string)
-- **whencreated** (string)
-- **overagelimit** (number)
-- **priv_ip_address** (string, private IP address)
-- **apn** (string)
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": [
-    {
-      "id": 37,
-      "deviceid": 0,
-      "devicename": null,
-      "userid": null,
-      "partnerid": 0,
-      "sim": "99900001",
-      "msisdn": "1111111",
-      "imsi": 1000001,
-      "dataplansubscriptionid": 0,
-      "tier": 0,
-      "carrier": 1,
-      "state": "LIVE",
-      "whenclaimed": "0000-00-00 00:00:00",
-      "whenexpires": "0000-00-00 00:00:00",
-      "whencreated": "2016-05-02 14:59:53",
-      "overagelimit": -1,
-      "priv_ip_address": "0.0.0.0",
-      "apn": "test"
-    }
-  ]
-}
-
-## Changing Plans [/api/1/links/cellular/{id}/changeplan]
-
-+ Parameters
-    + id (required, number, '37')
-        Will only return the result that matches the cellular link id if supplied.
-
-### Change Plan [POST]
-
-On success, the response includes the following fields:
-- **order_data** (object, contains data regarding the activation of the phone number.)
-- **preview** (bool, true if it is in preview mode)
-- **sku** (string, sku of the product)
-- **unit_cost** (number, unit cost of ordered product)
-- **total_cost** (number, total cost of ordered product)
-- **description** (string, description of ordered product)
-- **extra_description** (string, extra description of ordered product)
-- **needs_shipping** (bool, true if product needs shipping)
-- **shipping_cost** (number, shipping cost)
-
-+ Request (application/x-www-form-urlencoded)
-
-    planid=52&tier=1
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": null,
-  "order_data": {
-    "preview": false,
-    "sku": "PLANCHANGE",
-    "unit_cost": 0,
-    "total_cost": 0,
-    "quantity": 1,
-    "description": "Plan Change for 1 SIMs",
-    "extra_description": "Plan:3 MB($3.40 per 24 months)",
-    "needs_shipping": false,
-    "shipping_cost": 0
-  }
-}
-
-## Overage Limit [/api/1/links/cellular/{id}/overagelimit]
-
-
-+ Parameters
-    + id (required, number, '37')
-        Will only return the result that matches the cellular link id if supplied.
-
-### Change Overage Limit [POST]
-
-The following form fields are required in the POST body:
-- **limit** (number, required, the new overage limit)
-
-On success, the response includes the following fields:
-- **id** (number, cellular link id)
-- **deviceid** (number, device id)
-- **devicename** (string, name of the device)
-- **userid** (number, user's id)
-- **partnerid** (number, partner id)
-- **sim** (string, SIM card number)
-- **msisdn** (string)
-- **imsi** (string, imsi)
-- **dataplansubscriptionid** (number, data plan subscription id)
-- **tier** (number, tier)
-- **carrier** (number, carrier id)
-- **state** (string, device state)
-- **whenclaimed** (string, when was the SIM number claimed)
-- **whenexpires** (string)
-- **whencreated** (string)
-- **overagelimit** (number)
-- **priv_ip_address** (string, private IP address)
-- **apn** (string)
-
-+ Request (application/x-www-form-urlencoded)
-
-    limit=10
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": [
-    {
-      "id": 37,
-      "deviceid": 82,
-      "devicename": "Unnamed Device (00001)",
-      "userid": 477,
-      "partnerid": 1,
-      "sim": "99900001",
-      "msisdn": "1111111",
-      "imsi": 1000001,
-      "dataplansubscriptionid": 52,
-      "tier": 1,
-      "carrier": 1,
-      "state": "",
-      "whenclaimed": "2016-05-04 14:41:28",
-      "whenexpires": "2018-04-24 14:41:28",
-      "whencreated": "2016-05-02 14:59:53",
-      "overagelimit": 10,
-      "apn": "test"
-    }
-  ]
-}
-
-## Claiming SIMs [/api/1/links/cellular/sim_{sim}/claim]
-
-+ Parameters
-    + sim (required, number, '99900001')
-        Will only return the result that matches the sim number if supplied.
-
-### Claim a SIM [POST]
-
-
-The following form fields are required in the POST body:
-- **plan** (number, required, the plan id that is going to be used)
-
-On success, the response includes the following fields:
-- **device** (number, devide id)
-- **link** (number, link id)
-- **sim** (number, SIM number)
-- **order_data** (object, contains data regarding the activation of the phone number.)
-- **preview** (bool, true if it is in preview mode)
-- **sku** (string, sku of the product)
-- **unit_cost** (number, unit cost of ordered product)
-- **total_cost** (number, total cost of ordered product)
-- **description** (string, description of ordered product)
-- **extra_description** (string, extra description of ordered product)
-- **needs_shipping** (bool, true if product needs shipping)
-- **shipping_cost** (number, shipping cost)
-
-+ Request (application/x-www-form-urlencoded)
-
-    sim=99900001
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": [
-    {
-      "device": 82,
-      "link": 37,
-      "sim": "99900001"
-    }
-  ],
-  "order_data": {
-    "preview": false,
-    "sku": "PLAN",
-    "unit_cost": 81.6,
-    "total_cost": 81.6,
-    "quantity": 1,
-    "description": "Data plan for SIM 99900001",
-    "extra_description": "Plan:3 MB($3.4 per 24 months), Activation:$0(included)",
-    "needs_shipping": false,
-    "shipping_cost": 0
-  }
-}
-
-## Cellular Images [/api/1/links/cellular/images]
-
-### Retrieve Cellular Images [GET]
-
-On success, the response includes the following fields:
-- **image_url** (string, the image url)
-- **carrierid** (number, carrier id)
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": [
-    {
-      "image_url": "asdf",
-      "carrierid": 1
-    }
-  ]
-}
-
-## Changing States [/api/1/links/cellular/{id}/state]
-
-+ Parameters
-    + id (required, number, '37')
-        Will only return the result that matches the cellular link id if supplied.
-
-### Change Cellular State [POST]
-
-
-The following form fields are required in the POST body:
-- **state** (number, required, the new state. Possible states include: 'live', 'pause' and 'deactivate')
-
-On success, the response includes the following fields:
-- **newstate** (string, the device's new state)
-
-+ Request (application/x-www-form-urlencoded)
-
-    state=live
-
-+ Response 200 (application/json)
-
-{
-  "success": true,
-  "data": {
-    "newstate": "LIVE"
-  }
-}
