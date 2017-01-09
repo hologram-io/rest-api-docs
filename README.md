@@ -1,7 +1,7 @@
-# Hologram REST API Documentation
+# RETIRED - See main [docs repository](https://github.com/hologram-io/docs)
 
-This repo contains the source API Blueprint file for Hologram's REST API
-documentation. Find the actual API docs on [Apiary](https://docs.hologram.apiary.io/#).
+The Hologram REST API documentation source now lives in our our
+[main docs repository](https://github.com/hologram-io/docs).
 
 Our main documentation site, including guides, tutorials, and non-REST reference
 documentation is at [hologram.io/docs](https://hologram.io/docs/).
