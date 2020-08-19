@@ -1,3 +1,1556 @@
-The Hologram REST API documentation source now lives in our our
-[main docs repository](https://github.com/hologram-io/docs).
+FORMAT: 1A
+HOST: https://dashboard.hologram.io/
 
+# Hologram
+
+The Hologram HTTP API is a REST-style interface for managing Hologram devices, accounts, and cloud data.
+
+Using the Hologram REST API, you can activate SIMs, get your devices approximate location, send SMS to your devices, update a device's usage limit, and much more.
+
+## Authentication
+
+Hologram supports **HTTP Basic authentication** using API keys. Simply set the username of the request to `apikey`. The password field is the API key itself.
+
+You can find your API key on the Hologram Dashboard under
+[Account Settings](https://dashboard.hologram.io/account/api):
+
+![API key screenshot](https://hologram.io/wp-content/uploads/2016/12/apikey.png)
+
+Your API key gives you access to your personal account, as well as any organizations you are a member of. Make sure you don't store your API key in a publicly accessible place like GitHub. If you are a member of multiple organizations, many endpoints accept an `orgid` argument to filter for devices or other objects within a specific organization.
+
+You can find your orgid by following this guide from our Help Center.
+
+### Header Example
+
+```
+curl --verbose GET \
+'https://dashboard.hologram.io/api/1/users/me' \
+-u apikey:2rjpYZZNzFAoGxAgEP2SC6moL3emyB
+```
+
+You can also base64 encode "apikey:[YOUR_API_KEY]" where [YOUR_API_KEY] is your API key and include it directly in the header.
+```
+curl --verbose GET \
+'https://dashboard.hologram.io/api/1/users/me' \
+--header "Authorization: Basic YXBpa2V5OjJyanBZWlpOekZBb0d4QWdFUDJTQzZtb0wzZW15Qg=="
+```
+
+## Requests
+Request bodies can be provided in either JSON or form-urlencoded formats. Please note that the examples in this documentation will only display JSON bodies.
+
+### **JSON body**
+```
+curl --verbose --request POST \
+--header "Content-Type: application/json" \
+--header "Authorization: Basic YXBpa2V5OjJyanBZWlpOekZBb0d4QWdFUDJTQzZtb0wzZW15Qg=="
+--data '{"deviceid": 56668, "body": "Hello device!"}' \
+'https://dashboard.hologram.io/api/1/sms/incoming'
+```
+
+### **form-urlencoded body**
+
+```
+curl --verbose --request POST \
+--header "Content-Type: application/x-form-urlencoded" \
+--header "Authorization: Basic YXBpa2V5OjJyanBZWlpOekZBb0d4QWdFUDJTQzZtb0wzZW15Qg=="
+--data 'deviceid=56668&body=Hello%20device!' \
+'https://dashboard.hologram.io/api/1/sms/incoming'
+```
+
+## Responses
+
+All API responses are returned as JSON objects with the following fields:
+
+* `success` (boolean) - Indicates whether the request was successful.
+* `data` (object or array) - Contains the requested data or information about the operation that was performed. Only present when `success` is true.
+* `error` (string) - Information about why the request failed. Only present when `success` is false.
+
+Most GET responses will also include the following fields if a limit is included as part of the query string:
+
+* `limit` (number) - The query limit, some have this value built in and others often have a maximum value that the limit can be
+* `size` (number) - The number of values returned by the query
+* `continues` (boolean, optional) - This is only returned if there are more values than were returned
+* `links` (array) - Contains information related to the query performed
+    * `path` (string) - The API endpoint path
+    * `base` (string) - API base URL
+    * `next` (string) - URL with query string to get the next results
+
+## Rate Limiting
+In order to provide a good quality of service to all of our customers, we enforce a rate limit on all API requests.
+
+If you exceed the rate limit you will receive a HTTP 429 response with a JSON response body like this:
+
+```
+{
+  "success":false,
+  "error":"API rate limit exceeded"
+}
+```
+
+If you receive this response, you should refrain from making requests for 5-10 seconds and then retry the request.
+
+Hologram's REST API provides methods to perform many requests in bulk. For example, you can change the plans of multiple SIMs at once using https://dashboard.hologram.io/api/1/links/cellular/changeplan.
+
+If there is request you would like to make in bulk but cannot, please reach out to [success@hologram.io](mailto:success@hologram.io) for assistance.
+
+
+## Group Devices
+Using the /devices endpoint, you can retrieve information about devices based on parameters. You can also update the name of a device, transfer ownership of a device to a different organization, and add device tags.
+            
+### Retrieve a Device [GET /api/1/devices/{deviceid}]
+
+`GET https://dashboard.hologram.io/api/1/devices/{deviceid}`
+
+Retrieves the details of an existing device. Specify the unique device identifier (device ID) in the request URL, which you can find on the Dashboard.
+
++ Parameters
+    + deviceid: 1234 (number) - Return the device with the given device ID
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device)
+
+### List All Devices [GET /api/1/devices{?orgid,orgids,tagid,tagname,sim,limit,startafter,id,ids,linkid,phone,tunnelable,name,type,withlocation,imei,imei%2Dsv}]
+`GET https://dashboard.hologram.io/api/1/devices`
+
+Returns a list of your devices. The devices are returned sorted by creation date, with the most recent devices appearing first.
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return results for the given organization ID
+    + orgids: 1,2,3,4 (array, optional)
+        Only return results for the given organization IDs   
+    + tagid: 45 (number, optional)
+        Only return devices with the given tag ID
+    + tagname: sensors (string, optional)
+        Only return devices with the given tag name
+    + sim: 999000000123 (string, optional)
+        Show device with specific SIM number
+    + limit: 20 (string, optional)
+        Return a maximum of this many devices
+    + startafter: 1 (number, optional)
+        Return the devices whose IDs come after the given device ID
+    + id: 1 (number, optional)
+        Return the device with the given device ID
+    + ids: 1,2,3 (array, optional)
+        Return any device ids that match those given in the array
+    + linkid: 1 (number, optional)
+        Return the device with the given Link ID
+    + phone: +55555555555 (string, optional)
+        Return the device with the given phone number
+    + tunnelable: true (boolean, optional)
+        Return the devices that are/n't tunnelable through Spacebridge
+    + name: my device (string, optional)
+        Return the device with the given name
+    + type: tracker (string, optional)
+        Return devices with the given type name
+    + withlocation: true (boolean, optional)
+        Include location data on all devices where we have enough information to determine that. Requires professional plan.
+    + imei: 957520074024080 (string, optional)
+        Filter for devices that had the given IMEI on their last session. This searches for
+        standard IMEI which should match what is on the label for the device. 
+    + imei%2Dsv: 9575200740240801 (string, optional)
+        Filter for devices that had the given IMEI-SV on their last session. This searches for
+        IMEI-SV which is the normal IMEI but instead of a check digit at the end it has a two
+        digit software version. This is what the network usually sees.
+
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit
+        + size: 1 (number) - The number of values returned
+        + continues: true (boolean) - Only shows when there are more values
+        + links (array)
+            + path: /api/1/devices (string) - API endpoint specific base
+            + base: dashboard.hologram.io (string) - API base URL
+            + next: /api/1/devices?limit=1&startafter=4 (string) - URL with query string to get the next results
+        + data (array)
+            + (Device)
+
+        
+### Update a Device [PUT /api/1/devices/{deviceid}?orgid={{orgid}}]
+
+`PUT https://dashboard.hologram.io/api/1/devices/{deviceid}?orgid={{orgid}}`
+
+Updates the specified device by setting the values of the parameters passed. Any parameters not provided will be left unchanged.
+
+You can change the device's name displayed on the Dashboard. You can also transfer ownership of the device to a different organizaton. You must be an Admin of the recipient organization in order to transfer the device.
+
++ Parameters
+    + deviceid: 1234 (number) - Update device with the given device ID
+    + orgid: 4321 (number) - Current organization device is under
+    
++ Request (application/json)
+    + Attributes
+        + name: Device123 (string) - Update name of the device
+        + orgid: 100 (number) - Move device between organizations. Your API key must be at least an
+            Admin on both organizations for this to succeed
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device)
+        
+## Group Device Tags
+
+Device tags are user-configurable categories that you can use to classify your devices. A device may be linked to more than one tag.
+
+### List Device Tags [GET /api/1/devices/tags{?orgid,id,deviceids,limit}]
+`GET https://dashboard.hologram.io/api/1/tags`
+
+Returns all device tags associated with your devices.
+
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return results for the given organization ID
+    + id: 1 (number, optional)
+        Only return results for the given device tag ID
+    + deviceids: 12,34 (array, optional)
+        Only return results for the given device IDs
+    + limit: 200 (number, optional) - Number of records to return
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Device Tag)
+            
+### Create a Device Tag [POST /api/1/devices/tags]
+`POST https://dashboard.hologram.io/api/1/devices/tags`
+
+Creates a new device tag. If you are creating the tag to be used for devices in a custom organization (not your personal organization), the `orgid` URL parameter is required.
+
++ Request (application/json)
+    + Attributes
+        + name: My Tag (string, required) - Name for the new tag, try to use shorter
+        + deviceids: [1234, 5678] (array, optional) - Devices to add to the new tag (optional)
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device Tag)
+
+### Add Tag to Device [POST /api/1/devices/tags/{tagid}/link]
+`POST https://dashboard.hologram.io/api/1/devices/tags/{tagid}/link`
+
+Adds a device tag to specified device or devices.
+
++ Parameters
+    + tagid: 1234 (number) - The ID of the tag
+
++ Request (application/json)
+    + Attributes
+        + deviceids (array) - List of device IDs to link to this tag. All devices should be on the same organization as the tagid.
+            + 4321 (number)
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device Tag)
+
+### Remove Tag from Device [POST /api/1/devices/tags/{tagid}/unlink]
+`POST https://dashboard.hologram.io/api/1/devices/{tagid}/unlink`
+
+Removes a device tag from specified device or devices.
+
++ Parameters
+    + tagid: 1234 (number) - The ID of the tag
+
++ Request (application/json)
+    + Attributes
+        + deviceids (array) - List of device IDs to unlink from this tag
+            + 4321 (number)
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device Tag)
+        
+### Delete Device Tag [DELETE /api/1/devices/tags/{tagid}]
+`DELETE https://dashboard.hologram.io/api/1/tags/{tagid}`
+
+Deletes a device tag. If the tag is associated with any devices, the tag is removed from those devices.
++ Parameters
+    + tagid: 1234 (number) - The ID of the tag to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+
+## Group Cellular Links
+A Cellular Link is the association between a Device and a cellular data plan and SIM. Typically, a device has exactly one Cellular Link. Using the /links/cellular endpoints, you can activate SIMs, change plans, update usage limits, and un/pause data.
+
+### Activate Single SIM by ICCID [POST /api/1/links/cellular/sim_{ICCID}/claim]
+`POST https://dashboard.hologram.io/api/1/links/cellular/sim_{ICCID}/claim`
+
+Replace "ICCID" in request URL with ICCID of SIM to activate.
+
+Activates single SIM on the cellular network. Once a SIM is activated, you can begin to pass data. Any monthly charges and data usage charges will take effect.
+
+If you are activating a SIM on a plan that has a monthly fee, your account will be immediately charged the monthly fee for all devices you are activating. If your account does not have enough balance to cover these charges, the request will fail.
+
+Activating a SIM creates a new device and corresponding cellular link.
+
++ Request (application/json)
+    + Attributes
+        + plan: 202 (number) - Device data plan. Look up plan IDs with
+        [List Data Plans](#reference/device-management/data-plans/list-data-plans).
+        + zone: global (string) - The default value is 'global'. Reference /plans endpoint for valid zones available with each plan.
+        + orgid: 100 (number) - Specify the organization to activate the plan on. Your API key must have activation role privileges on the target organization
+        + tagid: 1 (number, optional) - Add a tag specified by the tag ID
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (object)
+                + device: 1234 (number) - Device ID of the new corresponding device
+                + link: 3214 (number) - ID of the new cellular link
+                + sim: 99990000000012345678 (string)
+
+### Activate Multiple SIMs by ICCID [POST /api/1/links/cellular/bulkclaim]
+`POST https://dashboard.hologram.io/api/1/links/cellular/bulkclaim`
+
+Include all ICCIDs to be activated separated by commas in array. 
+
+Activates multiple SIMs on the cellular network. Once a SIM is activated, you can begin to pass data. Any monthly charges and data usage charges will take effect.
+
+If you are activating SIMs on a plan that has a monthly fee, your account will be immediately charged the monthly fee for all devices you are activating. If your account does not have enough balance to cover these charges, the request will fail.
+
+Activating SIMs creates new devices and corresponding cellular links.
+
++ Request (application/json)
+    + Attributes
+        + sims (array) - Array of SIM numbers to activate
+            + 9999999999999 (string)
+            + 1111111111111 (string)
+        + plan: 202 (number) - Device data plan. Look up plan IDs with
+        [List Data Plans](#reference/device-management/data-plans/list-data-plans).
+        + zone: global (string) - The default value is 'global'. Reference /plans endpoint for valid zones available with each plan.
+        + orgid: 100 (number) - Specify the organization to activate the plan on. Your API key must have activation role privileges on the target organization
+        + tagid: 1 (number, optional) - Add a tag specified by the tag ID
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (object)
+                + device: 1234 (number) - Device ID of the new corresponding device
+                + link: 3214 (number) - ID of the new cellular link
+                + sim: 99990000000012345678 (string)
+                
+### Activate SIMs by ICCID range [POST /api/1/links/cellular/bulkclaim]
+`POST https://dashboard.hologram.io/api/1/links/cellular/bulkclaim`
+
+Best used to activate 10, 100, or 1000 pack of SIMs ordered together. Include first and last ICCIDs to be activated (printed on SIM pack).
+
+Activates SIMs within an ICCID range on the cellular network. Once a SIM is activated, you can begin to pass data. Any monthly charges and data usage charges will take effect.
+
+If you are activating SIMs on a plan that has a monthly fee, your account will be immediately charged the monthly fee for all devices you are activating. If your account does not have enough balance to cover these charges, the request will fail.
+
+Activating a SIM creates a new device and corresponding cellular link.
+
++ Request (application/json)
+    + Attributes
+        + simrange: `99990000000012345678-99990000000012345699` (string) - Range of SIM numbers to activate
+        + plan: 202 (number) - Device data plan. Look up plan IDs with
+        [List Data Plans](#reference/device-management/data-plans/list-data-plans).
+        + zone: global (string) - The default value is 'global'. Reference /plans endpoint for valid zones available with each plan.
+        + orgid: 100 (number) - Specify the organization to activate the plan on. Your API key must have activation role privileges on the target organization
+        + tagid: 1 (number, optional) - Add a tag specified by the tag ID
+            
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (object)
+                + device: 1234 (number) - Device ID: ID of the new corresponding device
+                + link: 3214 (number) - Link ID: ID of the new cellular link
+                + sim: 99990000000012345678 (string)
+                
+### Retrieve a Cellular Link [GET /api/1/links/cellular/{linkid}]
+`GET https://dashboard.hologram.io/api/1/links/cellular/{linkid}`
+
+Retrieves the details of an existing cellular link. You need only supply the unique link identifier (link ID), which you can find on the Dashboard or in the response of a /devices request.
++ Parameters
+    + linkid: 54321 (number) - Return the SIM with the given link ID
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Cellular Link)
+
+### List All Cellular Links [GET /api/1/links/cellular{?orgid,limit,showip,id,ids,sim,sims,simrange,msisdn,tunnelable,imsi,imsis,deviceid,deviceids,claimedafter,claimedbefore,tagid,tagids,tagname,carrierid,startafter}]
+`GET https://dashboard.hologram.io/api/1/links/cellular`
+
+Returns a list of your SIM cards. However, we recommend using the /devices endpoint instead, which returns the cellular link information for each device.
+
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return results for the given organization ID
+    + limit: 20 (string, optional)
+        Return a maximum of this many links.
+    + id: 1 (number, optional)
+        Only return results for the given Link ID
+    + ids: 1,2,3 (array, optional)
+        Only return results for the given Link IDs
+    + sim: 9990001 (string, optional)
+        Only return results for the given SIM number/ICCID
+    + sims: 9990001,9990002 (array, optional)
+        Only return results for the given SIMs/ICCIDs
+    + simrange: 9990001-9990005 (string, optional)
+        Only return results for the given SIM/ICCID range
+    + msisdn: 12345678 (string, optional)
+        Only return results for the given MSISDN
+    + tunnelable: true (boolean, optional)
+        Return the devices that are/n't tunnelable through Spacebridge
+    + imsi: 1234578 (number, optional)
+        Only return results for the given IMSI
+    + imsis: 12,34 (array, optional)
+        Only return results for the given IMSIs
+    + deviceid: 1 (number, optional)
+        Only return results for the given device ID
+    + deviceids: 12,34 (array, optional)
+        Only return results for the given device IDs
+    + claimedafter: 1480550400 (number, optional) 
+        Only return results for the links claimed after the given time (Unix timestamp)
+    + claimedbefore: 1480550400 (number, optional) 
+        Only return results for the links claimed before the given time (Unix timestamp)
+    + tagid: 45 (number, optional)
+        Only return devices with the given tag ID
+    + tagids: 12,34 (array, optional)
+        Only return results for the given device IDs
+    + tagname: sensors (string, optional)
+        Only return devices with the given tag name
+    + startafter: 1 (number, optional)
+        Return the SIMs with link IDs that come after the given ID
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when there are more values
+        + links (array)
+            + path: /api/1/links/cellular (string) - API endpoint specific base
+            + base: dashboard.hologram.io (string) - API base URL
+            + next: /api/1/links/cellular?limit=1&startafter=4 (string) - URL with query string to get the next results
+        + data (array)
+            + (Cellular Link)
+
+### Pause or Unpause Data [POST /api/1/links/cellular/{linkid}/state]
+`POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/state`
+
+Pause or unpause your SIM. Pausing the SIM will prevent your device from passing any data. Paused SIMs still incur any applicable monthly reactivation fees.
+
++ Parameters
+    + linkid: 54321 (number) - Link ID of the link to modify
+
++ Request (application/json)
+    + Attributes
+        + state: pause (string) - New SIM state to set. Either `pause` or `live`.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (object)
+            + newstate: PAUSED-PENDING-USER (string) - New state of the link.
+                May be a 'pending' state until the change is propagated to the cellular network.
+                
+
+                
+### Retrieve SIM's State History  [GET /api/1/links/cellular/{linkid}/history]
+
+Retrieve a list of your SIM's state changes. This includes activations, Preflight activations, pauses, unpauses, and deactivations.
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to change
+
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Sim State History)
+
+### Update SIM's Overage Limit [POST /api/1/links/cellular/{linkid}/overagelimit]
+`POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/overagelimit`
+
+Restrict the amount of data your device can use in a given billing period. Once your device reaches the data limit, the SIM will automatically pause. In order to unpause your device, you will need to increase the data limit.
+
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to change
+
++ Request (application/json)
+    + Attributes
+        + limit: 20000 (number) -
+            Number of bytes over the plan limit to allow. Set `-1` for no data limit. See the
+            [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits) for details.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Cellular Link)
+        
+
+### Update SIM's Data Threshold - Closed Beta [PUT /api/1/links/cellular/{linkid}/]
+`PUT https://dashboard.hologram.io/api/1/links/cellular/{linkid}/`
+Update the data threshold of your device. This endpoint is available to users in our Closed Beta.
+
++ Parameters
+    + linkid: 4321 (number, required) - Unique link identifier or link ID
+    
++ Request (application/json)
+    + Attributes
+        + datathreshold: 500 (number) - New data threshold in bytes
+        
++ Response 200 (application/json)
+    + Attributes
+        + id: 4321 (number) - Unique link identifier or link ID
+        + deviceid: 1234 (number) - Device ID corresponding to the link
+        + devicename: "My Device" (string) - Name of device corresponding to the link
+        + orgid: 123 (number) - Organization ID of the organization that owns the link/device
+        + tunnelable: 0 (number) - Is tunneling enabled for the link? 1 = true, 0 = false
+        + partnerid: 1 (number)
+        + sim: 9990000000000001234 (string) - SIM number or ICCID
+        + msisdn: 999900001234 (string) - MSISDN corresponding to the link
+        + imsi: 123456789876543 (number) - IMSI corresponding to the link
+        + dataplansubscriptionid: 75 (number) - Data plan ID
+        + zone: 1 (number) - Geographical zone of the data plan
+        + carrier: 2 (number) - ID of the carrier that the link last connected to
+        + state: LIVE (string) - State of the link. LIVE, PAUSED, DEACTIVATE
+        + whenclaimed: `2019-01-05 01:00:00` (string) - UTC timestamp when the SIM was activated
+        + whenexpires: `2019-02-05 01:00:00` (string) - UTC timestamp when the current billing period ends or when the data plan was canceled
+        + whencreated: `2018-10-04 04:57:17` (string) - UTC timestamp when the link's record was first created
+        + overagelimit: 500 (number) - SIM data limit in Bytes. If there is no limit, `overagelimit` is -1. See the
+        + apn: hologram (string) - APN to use when connecting with this SIM card
+                    
+        
+## Group Alerts - Closed Beta
+The `alerts` endpoints return alert information related to usage data or device status.
+
+Please note that these endpoints are only available to organizations currently included in the Closed Beta. If you are interested in using these endpoints, please contact [sales@hologram.io](mailto:sales@hologram.io).
+
+### List All alerts [GET /api/1/alerts{?orgid,limit,startafter}]
+List all alerts.
+`GET https://dashboard.hologram.io/api/1/alerts`
+Returns all alerts for a given organization, organized by deviceid. 
+
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return alerts that are usable for the given organization ID
+    + limit: 20 (string, optional)
+        Return a maximum of this many alerts.
+    + startafter: 1 (number, optional)
+        Return the alerts whose IDs come after the given ID
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 20 (number) - The query limit 
+        + size: 20 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when there are more values
+        + lastid: 1254 (number) - Id for the last alert retrieved
+        + data (array)
+            + (object)
+
+### List All TAC change alerts [GET /api/1/alerts/tac_changes{?orgid,limit,startafter}]
+
+List all TAC change alerts.
+`GET https://dashboard.hologram.io/api/1/alerts/tac_changes`
+Returns all TAC change alerts for a given organization, organized by deviceid. 
+Alert data lists old TAC and new TAC for each deviceid returned in the list.
+
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return alerts that are usable for the given organization ID
+    + limit: 20 (string, optional)
+        Return a maximum of this many alerts.
+    + startafter: 1 (number, optional)
+        Return the alerts whose IDs come after the given ID
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when there are more values
+        + lastid: 1254 (number) - Id for the last alert retrieved
+        + data (array)
+            + (object)
+
+
+### List All Usage alerts [GET /api/1/alerts/usage{?orgid,limit,startafter}]
+
+List all alerts related to usage. 
+`GET https://dashboard.hologram.io/api/1/alerts/usage`
+Returns all usage alerts for a given organization, organized by deviceid. 
+Alerts are created when a given device exceeds a pre-selected threshold of data usage for a billing period.
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return alerts that are usable for the given organization ID
+    + limit: 20 (string, optional)
+        Return a maximum of this many alerts.
+    + startafter: 1 (number, optional)
+        Return the alerts whose IDs come after the given ID
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when there are more values
+        + lastid: 1254 (number) - Id for the last alert retrieved
+        + data (array)
+            + (object)
+
+
+
+### List All Custom alerts [GET /api/1/alerts/custom{?orgid,limit,startafter}]
+Return any custom alerts created for an organization's devices
+`GET https://dashboard.hologram.io/api/1/alerts/custom`
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return alerts that are usable for the given organization ID
+    + limit: 20 (string, optional)
+        Return a maximum of this many alerts.
+    + startafter: 1 (number, optional)
+        Return the alerts whose IDs come after the given ID
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when there are more values
+        + lastid: 1254 (number) - Id for the last alert retrieved
+        + data (array)
+            + (object)
+
+
+### List All Device Data Limit alerts [GET /api/1/alerts/device_data_limit{?orgid,limit,startafter}]
+List alerts created by devices reaching a limit of data usage.
+`GET https://dashboard.hologram.io/api/1/alerts/device_data_limit`
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return alerts that are usable for the given organization ID
+    + limit: 20 (string, optional)
+        Return a maximum of this many alerts.
+    + startafter: 1 (number, optional)
+        Return the alerts whose IDs come after the given ID
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when there are more values
+        + lastid: 1254 (number) - Id for the last alert retrieved
+        + data (array)
+            + (object)
+
+### Get Alert Count by Type [GET /api/1/alerts/count{?orgid,type}]
+Get alert count by type.
+`GET https://dashboard.hologram.io/api/1/alerts/count`
+Returns the number of alerts by type.
+
++ Parameters
+    + orgid: 1234 (number, required)
+        Only returns alert count that are usable for the given organization ID
+    + type: TAC_CHANGE (string, required)
+        Type of alert to get the count of
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data: 275 (number) - Number of alerts for given alert type
+
+### Acknowledge Alert by Alert id [PUT /api/1/alerts/{id}/acknowledge{?orgid}]
+Acknowledge alert by alert id.
+`PUT https://dashboard.hologram.io/api/1/alerts/{id}/acknowledge`
+
++ Parameters
+    + orgid: 1234 (number, required)
+        Only acknowledges alert that are usable for the given organization ID
+    + id: 1 (number, required)
+        Id for the alert being acknowledged
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+### Unacknowledge Alert by Alert id [PUT /api/1/alerts/{id}/unacknowledge{?orgid}]
+Unacknowledge alert by alert id.
+`PUT https://dashboard.hologram.io/api/1/alerts/{id}/unacknowledge`
+
++ Parameters
+    + orgid: 1234 (number, required)
+        Only unacknowledges alert that are usable for the given organization ID
+    + id: 1 (number, required)
+        Id for the alert being unacknowledged
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+### Acknowledge Alerts by Alert ids [PUT /api/1/alerts/acknowledge{?orgid}]
+Acknowledge alerts by alert ids.
+`PUT https://dashboard.hologram.io/api/1/alerts/acknowledge`
+
++ Parameters
+    + orgid: 1234 (number, required)
+
++ Request (application/json)
+    + Attributes
+        + alertIds: 12,34 (array) - List of alert ids to be acknowledged
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+### Acknowledge All Alerts [PUT /api/1/alerts/acknowledgeall{?orgid}]
+Acknowledge all alerts.
+`PUT https://dashboard.hologram.io/api/1/alerts/acknowledgeall`
+
++ Parameters
+    + orgid: 1234 (number, required)
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+                
+## Group Data Plans
+The `/plans` endpoints return pricing and descriptions for the different Hologram data plans your organization has access to. When changing the data plan for a cellular link via API (using the /links/cellular endpoint), you must refer to the plan by its ID, which you can determine from these endpoints.
+
+### List All Data Plans [GET /api/1/plans{?orgid,id,ids,limit,startafter}]
+`GET https://dashboard.hologram.io/api/1/plans`
+
+Returns all data plans matching the specified parameters.
++ Parameters
+    + orgid: 1234 (number, optional)
+        Only return plans that are usable for the given organization ID
+    + limit: 20 (string, optional)
+        Return a maximum of this many plans.
+    + id: 1 (number, optional)
+        Only return results for the given plan ID
+    + ids: 1,2,3 (array, optional)
+        Only return results for the given plan IDs
+    + startafter: 1 (number, optional)
+        Return the plans whose IDs come after the given ID
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when there are more values
+        + links (array)
+            + path: /api/1/plans (string) - API endpoint specific base
+            + base: dashboard.hologram.io (string) - API base URL
+            + next: /api/1/plans?limit=1&startafter=4 (string) - URL with query string to get the next results
+        + data (array)
+            + (Data Plan)
+
+### Get a Data Plan [GET /api/1/plans/{planid}]
+`GET https://dashboard.hologram.io/api/1/plans/{planid}`
+
+Retrieves the details of a specific data plan.
++ Parameters
+    + planid: 41 (number) - Return the data plan with the specified plan ID
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Data Plan)
+
+### Update a SIM's Data Plan [POST /api/1/links/cellular/{linkid}/changeplan]
+`POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/changeplan`
+
+Updates a SIM's cellular plan by setting the values of the parameters passed. Any parameters not provided are left unchanged.
+
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to change
+
++ Request (application/json)
+    + Attributes
+        + plan: 202 (number) - Device data plan. Look up plan IDs with
+        [List Data Plans](#reference/device-management/data-plans/list-data-plans).
+        + zone: global (string) - The default value is 'global'. Reference /plans endpoint for valid zones available with each plan.
+        + orgid: 123 (number) - Org ID the device is currently owned by
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + order_data  (Order Data)
+            + sku: PLANCHANGE
+            + unit_cost: 2.23
+            + total_cost: 2.23
+            + description: Plan Change for 1 SIM
+            + transaction_type_id: PC (string)
+            + extra_description (string)
+                + Sample: Plan:5 MB
+        
+## Group Usage Data
+Retrieve data and SMS usage history for a single device or all of your devices.
+
+### List All Recent Data Sessions [GET /api/1/usage/data{?orgid,orgids,startafter,linkid,linkids,tagid,tagids,tagname,timestart,timeend,islive,limit}]
+`GET https://dashboard.hologram.io/api/1/usage/data`
+
+Returns individual sessions and their data usage for the last three months. Use the linkid parameter to retrieve data sessions for a specific device.
+
++ Parameters
+    + orgid: 1 (number, optional) - Return data sessions for devices owned by the specified organization
+    + orgids: 1,2 (array, optional) - Return data sessions for devices owned by the specified organizations
+    + startafter: 1 (number, optional) - Return usage data for records whose ID come after the specified ID
+    + linkid: 0 (number, optional) - Return data sessions for a device specified by link ID
+    + linkids: 1,2 (array, optional) - Return data sessions for devices specified by link IDs
+    + tagid: 0 (number, optional) - Return data sessions with specified tag ID
+    + tagids: 1,2 (array, optional) - Return data sessions with specified tag IDs
+    + timestart: 1480550400 (number, optional) - Return data sessions received after this time (Unix timestamp)
+    + timeend: 1480550400 (number, optional) - Return data sessions received before this time (Unix timestamp)
+    + tagname: _API_ (string, optional) - Return data sessions with specified tags
+    + islive: true (boolean, optional) - Return data sessions for live devices. Does not include data sessions for devices that are currently paused or inactive.
+    + limit: 200 (number, optional) - Return a maximum of this many usage sessions
+
++ Response 200
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when limit is less than size
+        + links (array)
+            + path: /api/1/usage/data (string) - API endpoint specific base
+            + base: dashboard.hologram.io (string) - API base URL
+            + next: /api/1/usage/data?limit=1&startafter=4 (string) - URL with query string to get the next results
+        + data (array)
+            + (object)
+                + linkid: 1 (number) - Link ID of the usage record
+                + record_id: 1 (number) - Unique record ID of the usage data
+                + session_begin: 2017-09-27 16:04:20 (string) - Time session began
+                + timestamp: 2017-09-27 16:04:22 (string) - Time session ended
+                + bytes: 500000 (number) - Bytes used during session
+                + cellid: 1234 (number) - Base transceiver station identifier
+                + lac: 543210 (number) - Location area code
+                + network_name: "Hologram Global" (string) - Name of the network used during the session
+                + imei: 357520072225309 (string) - IMEI of the device. For more information see: https://support.hologram.io/hc/en-us/articles/360035696673-What-is-the-difference-between-IMEISV-and-IMEI-
+                + imeisv: 3575200722253001 (string) - IMEI-SV of the device. For more information see: https://support.hologram.io/hc/en-us/articles/360035696673-What-is-the-difference-between-IMEISV-and-IMEI-
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": [
+            {
+                "linkid": 231720,
+                "record_id": 2,
+                "session_begin": "2017-09-27 16:04:20",
+                "timestamp": "2017-09-27 16:04:22",
+                "bytes": 500000,
+                "imei": "1234567890123456",
+                "imeisv": "123456789012345001"
+                "cellid": 1234,
+                "lac": 543210,
+                "radio_access_technology": "LTE",
+                "network_name": "Hologram Global"
+            },
+            {
+                "linkid": 231720,
+                "record_id": 1,
+                "session_begin": "2017-09-27 16:04:20",
+                "timestamp": "2017-09-27 16:04:22",
+                "bytes": 2000,
+                "imei": "1234567890123456",
+                "imeisv": "123456789012345001"
+                "cellid": 321,
+                "lac": 7890,
+                "radio_access_technology": "LTE",
+                "network_name": "Hologram Global"
+            }
+          ]
+        }
+## List Usage Data by Day [GET /api/1/usage/data/daily{?orgid,linkid,linkids,tagid,tagids,tagname,timestart,timeend,islive,startafter,limit}]
+`GET https://dashboard.hologram.io/api/1/usage/data/daily`
+
+Returns total data usage for each device summarized by day in UTC
+
++ Parameters
+    + orgid: 1 (number, optional) - Return usage data for devices owned by organization specified by org ID
+    + linkid: 0 (number, optional) - Return usage data for a device specified by link ID
+    + linkids: 1,2 (array, optional) - Return usage data for devices specified by link IDs
+    + tagid: 0 (number, optional) - Return usage data for devices with tag specified by tag ID
+    + tagids: 1,2 (array, optional) - Return usage data for devices with tags specified by tag IDs
+    + tagname: _API_ (string, optional) - Return usage data for devices with tags specified by tag name
+    + timestart: 1480550400 (number, optional) - Return usage data received after this time (Unix timestamp)
+    + timeend: 1480550400 (number, optional) - Return usage data received before this time (Unix timestamp)
+    + islive: true (boolean, optional) - Return data sessions for devices in Live status. Does not include data sessions for devices that are currently paused or inactive.
+    + startafter: 1 (number, optional) - Return usage data for records whose ID come after the specified ID
+    + limit: 200 (number, optional) - Return a maximum of this many usage records
+
++ Response 200 (application/json)
+
+        {
+            "success": true,
+            "data": [
+                {
+                    "linkid": 231687,
+                    "record_id": 104691062,
+                    "date": "2017-04-18",
+                    "bytes": 2147483647,
+                    "session_count": 208258
+                },
+                {
+                    "linkid": 231687,
+                    "record_id": 104340784,
+                    "date": "2017-04-17",
+                    "bytes": 2147483647,
+                    "session_count": 353086
+                },
+                {
+                    "linkid": 231687,
+                    "record_id": 103977125,
+                    "date": "2017-04-16",
+                    "bytes": 2147483647,
+                    "session_count": 360584
+                },
+                {
+                    "linkid": 231687,
+                    "record_id": 103635146,
+                    "date": "2017-04-15",
+                    "bytes": 1511703886,
+                    "session_count": 62048
+                },
+                {
+                    "linkid": 231687,
+                    "record_id": 103255044,
+                    "date": "2017-04-14",
+                    "bytes": 2070144,
+                    "session_count": 2160
+                }
+            ]
+        }
+## List Usage Data by Month [GET /api/1/usage/data/monthly{?linkid,tagid,limit,orgid,mintime,maxtime}]
+`GET https://dashboard.hologram.io/api/1/usage/data/monthly`
+
+Returns total data usage for each device summarized by month
+
++ Parameters
+    + orgid: 1234 (number, optional) - Return usage data for devices owned by organization specified by org ID
+    + linkid: 0 (number, optional) - Return usage data for device specified by link ID
+    + tagid: 0 (number, optional) - Return usage data for devices with tag specified by tag ID
+    + mintime: 12/21/2017 (string, optional) - Return usage data after specified date
+    + maxtime: 12/22/2017 (string, optional) - Return usage data before specified date
+    + limit: 200 (number, optional) - Return a maximum of this many records
++ Response 200 (application/json)
+
+        {
+            "success": true,
+            "data": [
+                {
+                    "linkid": 8676,
+                    "record_id": "8676201801",
+                    "month": 1,
+                    "year": 2018,
+                    "session_count": "43",
+                    "bytes": 21474836
+                },
+                {
+                    "linkid": 8638,
+                    "record_id": "8638201801",
+                    "month": 1,
+                    "year": 2018,
+                    "session_count": "1",
+                    "bytes": 28
+                }
+            ]
+        }
+        
+## List Usage Data by Billing Period [GET /api/1/usage/data/billing{?linkid,tagid,limit,orgid}]
+`GET https://dashboard.hologram.io/api/1/usage/data/billing`
+
+Returns total data usage for each device summarized by billing period. Data is available for the last three months.
+
++ Parameters
+    + orgid: 1234 (number, optional) - Return usage data for devices owned by organization specified by org ID
+    + linkid: 0 (number, optional) - Return usage data for device specified by link ID
+    + tagid: 0 (number, optional) - Return usage data for devices with tag specified by tag ID
+    + limit: 200 (number, optional) - Return a maximum of this many records
++ Response 200 (application/json)
+
+        {
+            "success": true,
+            "data": [
+                 {
+                    "linkid": 363092,
+                    "cur_period_end": "2018-02-27 18:38:01",
+                    "periods_back": "1",
+                    "record_id": "3630921",
+                    "bytes": 1000
+                }
+            ]
+        }
+        
+## List Device-Originated SMS Usage [GET /api/1/usage/sms?{?orgid,orgids,startafter,linkid,linkids,tagid,tagids,tagname,timestart,timeend,islive,limit}]
+`GET https://dashboard.hologram.io/api/1/usage/sms`
+
+Returns individual device-originated SMS for the last three months. Use the linkid parameter to retrieve SMS for a specific device.
+
++ Parameters
+    + orgid: 1 (number, optional) - Return SMS for devices owned by the specified organization
+    + orgids: 1,2 (array, optional) - Return SMS for devices owned by the specified organizations
+    + startafter: 1 (number, optional) - Return SMS for devices whose linkid ID come after the specified ID
+    + linkid: 0 (number, optional) - Return SMS for a device specified by link ID
+    + linkids: 1,2 (array, optional) - Return SMS for devices specified by link IDs
+    + tagid: 0 (number, optional) - Return SMS with specified tag ID
+    + tagids: 1,2 (array, optional) - Return SMS with specified tag IDs
+    + timestart: 1480550400 (number, optional) - Return SMS after this time (Unix timestamp)
+    + timeend: 1480550400 (number, optional) - Return SMS before this time (Unix timestamp)
+    + tagname: _API_ (string, optional) - Return SMS with specified tags
+    + islive: true (boolean, optional) - Return SMS for live devices. Does not include SMS for devices that are currently paused or inactive.
+    + limit: 200 (number, optional) - Return a maximum of this many SMS
++ Response 200 (application/json)
+
+    {
+         "success": true,
+         "data": [
+           {
+               "linkid": 1234,
+               "record_id": 9887,
+               "timestamp": "2019-08-06 18:47:22",
+               "direction": "DO",
+               "other_number": "5555551234"
+          }
+    }
+
+
+
+## Group SMS
+Send inbound device-terminated (DT) SMS to or from your Hologram device.
+
+### Send SMS to Device [POST /api/1/sms/incoming]
+`POST https://dashboard.hologram.io/api/1/sms/incoming`
+
+Send an inbound device-terminated SMS to your Hologram device. There is no cost incurred for incoming SMS to your Hologram device. You can send an SMS to one device using `deviceid` or send the same SMS to multiple devices at once using `deviceids`.
+
++ Request (application/json)
+    + Attributes
+        + deviceid: 1234 (number, required) - Device ID of recipient device
+        + deviceids: 12,34 (array, required) - Device IDs of the recipient devices. Either an array of IDs or an ID is required, not both.
+        + fromnumber: `+1-312-555-1212` (string, optional) - Phone number to display as the sender. Optional.
+        + body: Hello world! (string) - ASCII Text message body
+
++ Request With base64-encoded body (application/json)
+    + Attributes
+        + deviceid: 1234 (number, required) - Device ID of recipient device
+        + deviceids: 12,34 (array, required) - Device IDs of the recipient devices. Either an array of IDs or an ID is required, not both.
+        + fromnumber: `+1-312-555-1212` (string, optional) - Phone number to display as the sender. Optional.
+        + base64body: SGVsbG8sIFdvcmxkIQo= (string) - Base64-encoded message body
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+## Group Cloud-to-Device Messaging
+
+Send a TCP or UDP message to one or more devices on the Hologram network.
+See the [guide](https://hologram.io/docs/guide/cloud/message-to-device/) for details.
+
+### Send Cloud Message to Device [POST /api/1/devices/messages]
+`POST https://dashboard.hologram.io/api/1/devices/messages`
+
++ Request (application/json)
+    + Attributes
+        + deviceids (array, required) - Device IDs of recipient devices
+            + 1234 (number)
+            + 1236 (number)
+        + protocol: TCP (string, required) - Protocol to use: 'TCP' or 'UDP'
+        + port: 80 (number, required) - Port to use
+        + data: Hello world! (string) - Data to send. Max length of 10k bytes. Must send either data or base64data
+        + base64data: SGVsbG8gd29ybGQhCg== (string) - The data to send, encoded in base64. Max length of 10k bytes. Must send either data or base64data
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (object)
+                + deviceid: 1234 (number)
+                + messageid: 9a9e55f0-a167-4d9d-972e-b2ad0740d449 (string)
+
+### Send Cloud Message to Device via Webhook [POST /api/1/devices/messages/{deviceid}/{webhookguid}]
+`POST https://dashboard.hologram.io/api/1/devices/messages/{deviceid}/{webhookguid}`
+
+
+This endpoint does not require authentication with your API key, as the webhook GUID serves as
+an authentication token. In order to generate a webhook URL, please visit the cloud configuration page for your device.
+
++ Parameters
+    + deviceid: 12345 (number) - Device ID of recipient device
+    + webhookguid: f56839c23a801251af8bf8c820f28a1f (string) - generated UUID for the webhook URL
+
++ Request (application/json)
+    + Attributes
+        + data: Hello world! (string) - Data to send. Max length of 10k bytes. Must send either data or base64data
+        + base64data: SGVsbG8gd29ybGQhCg== (string) - Data to send, encoded in base64. Max length of 10k bytes. Must send either data or base64data
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (object)
+                + deviceid: 1234 (number)
+                + messageid: 9a9e55f0-a167-4d9d-972e-b2ad0740d449 (string)
+                
+## Group Data Engine Messages
+Hologram’s Data Engine is a message queue and protocol translation layer designed to route data from your embedded devices to other internet-connected services. It features a low-bandwidth ingestion protocol designed for resource-constrained microcontrollers. See the [guide](https://hologram.io/docs/guide/cloud/data-router) for details on sending
+messages to the Data Router.
+
+### Send a Data Engine Message [POST /api/1/csr/rdm]
+`POST https://dashboard.hologram.io/api/1/csr/rdm`
+
+This endpoint can be used to send a message into the Hologram Data Engine on behalf of your Hologram device.
+
++ Request (application/json)
+    + Attributes
+        + deviceid: 54321 (number) - Device ID to associate the message to
+        + tags (array, optional) - Additional topics to associate with the message. Optional
+        + data: Hello, Hologram! (string) - Data payload of the message
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+### List Data Engine Messages [GET /api/1/csr/rdm{?deviceid,deviceids,limit,orgid,orgids,id,startafter,devicetagid,tagname,tagnames,topicname,topicnames,timestart,timeend,error}]
+`GET https://dashboard.hologram.io/api/1/csr/rdm`
+
+
++ Parameters
+    + deviceid: 54321 (number, optional) - Only return messages originating from device specified by device ID
+    + deviceids: 1,2,3 (array, optional) - Return messages originating from a list of devices specified by device ID
+    + limit: 100 (number, optional) - Return a maximum of this many messages. Default is 25
+    + orgid: 3222 (number, optional) - Only return messages from devices belonging to the organization specified by org ID
+    + orgids: 1,2,3 (array, optional) - Return  messages from devices belonging to the organizations specified by org IDs
+    + id: 1 (number, optional) - Return message specified by message ID
+    + startafter: 1 (number, optional) - Return messages with message IDs that start after the specified ID
+    + devicetagid: 1 (number, optional) - Return a message specified by tag ID
+    + topicname: _RESTAPI_ (string, optional) - Return messages with a given topic
+    + topicnames: _RESTAPI_,_API_ (array, optional) - Return messages with given topics
+    + timestart: 1480550400 (number, optional) - Return messages received after this time (Unix timestamp)
+    + timeend: 1480550400 (number, optional) - Return messages received before this time (Unix timestamp)
+    + error: true (boolean, optional) - Return error messages
+
++ Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows if the limit is less than size
+        + links (array)
+            + path: /api/1/csr/data (string) - API endpoint specific base
+            + base: dashboard.hologram.io (string) - API base URL
+            + next: /api/1/csr/data?limit=1&startafter=4 (string) - URL with query string to get the next results
+        + data (array)
+            + (object)
+                + id: 123432 (number) - Unique message identifier
+                + logged (string) - Datetime when the message was received
+                    + Sample: 2016-12-04 20:21:00
+                + deviceid: 1234 (number) - Device ID that the message originated from
+                + data (string) - Raw message data (base64 encoded) and metadata
+                + record_id (string) - the message's internal UUID
+                    + Sample: 8e274992-cf84-11e5-a67e-bc764e20b516
+                + tags (array) - Topics (formerly called tags) associated with the message
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "continues": false,
+          "data": [
+            {
+              "id": 14,
+              "logged": "2015-04-09 15:59:59",
+              "deviceid": 77,
+              "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestB\"],\"data\":\"dGVzdGRhdGEx\"}",
+              "record_id": "8e274992-cf84-11e5-a67e-bc764e20b516",
+              "matched_rules": [
+                {
+                  "ruleid": 1234,
+                  "error": false,
+                  "result_data": ""
+                }
+              ],
+              "tags": [
+                "TestB",
+                "TestXYZ"
+              ]
+            },
+            {
+              "id": 13,
+              "logged": "2015-04-08 21:05:42",
+              "deviceid": 1,
+              "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
+              "record_id": "8e2748e7-cf84-11e5-a67e-bc764e20b516",
+              "matched_rules": []
+              "tags": [
+                "TestD",
+                "TestXYZ"
+              ]
+            }
+          ]
+        }
+
+## Group Device Tunneling
+Using Spacebridge, you can create secure, authenticated tunnels to send inbound data to a device to any port.
+
+You must enable tunneling for your device using the Dashboard. More information about Spacebridge can be found [here](https://hologram.io/docs/guide/cloud/spacebridge-tunnel/).
+
+### Create a Public Key [POST /api/1/tunnelkeys]
+`POST https://dashboard.hologram.io/api/1/tunnelkeys`
+
+Associate an SSH key with your user. This key can then be used to tunnel to devices that you control. There is a 5 key limit per user.
+
+
++ Request (application/json)
+    + Attributes
+        + public_key: `ssh-rsa AAAAB3Nzaasdf... user@example.com` (string, required) - SSH public key
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+
+### Enable a Public Key [POST /api/1/tunnelkeys/{id}/enable]
+`POST https://dashboard.hologram.io/api/1/tunnelkeys/{id}/enable`
+
++ Parameters
+    + id: 1234 (number) - ID of the tunnel key to enable
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data
+          + id: 1234 (number) - The key ID
+        
+### Disable a Public Key [POST /api/1/tunnelkeys/{id}/disable]
+`POST https://dashboard.hologram.io/api/1/tunnelkeys/{id}/disable`
+
++ Parameters
+    + id: 1234 (number) - ID of the tunnel key to disable
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data
+          + id: 1234 (number) - The key ID
+
+### List All Public Keys [GET /api/1/tunnelkeys{?withdisabled,id}]
+`GET https://dashboard.hologram.io/api/1/tunnelkeys`
+
++ Parameters
+    + withdisabled: 0 (number, optional) - Set to `1` to include disabled keys
+    + id: 1 (number, optional) - Get the public key with the given ID
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Tunnel Key)
+            
+## Group Account Management
+Manage your user information and any organizations you are a member of.
+
+### Retrieve a User [GET /api/1/users/me]
+`GET https://dashboard.hologram.io/api/1/users/me`
+
+Retrieves user information. You can only request your user information.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (User)
+
+### List Organizations [GET /api/1/organizations{?deleted,id,personal_for,limit}]
+`GET https://dashboard.hologram.io/api/1/organizations`
+
+Returns all organizations that you are a member of. This includes the personal organization tied to your user. When you create your Hologram account, an organization associated solely with your account is also created. This org is named after you. You cannot add other users to this organization.
+
+
++ Parameters
+    + deleted: false (boolean, optional) - Return organizations that are or are not deleted 
+    + id: 1 (number, optional) - Return organization specified by org ID
+    + personal_for: 1 (number, optional) - Return your personal organization
+    + limit: 200 (number, optional) - Return a maximum of this many organizations
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when there are more values
+        + links (array)
+            + path: /api/1/usage/data (string) - API endpoint specific base
+            + base: dashboard.hologram.io (string) - API base URL
+            + next: /api/1/usage/data?limit=1&startafter=4 (string) - URL with query string to get the next results
+        + data (array)
+            + (Organization)
+
+### Retrieve an Organization [GET /api/1/organizations/{orgid}]
+`GET https://dashboard.hologram.io/api/1/organizations/{orgid}`
+
++ Parameters
+    + orgid: 4321 (number) - The organization's unique identifier - Org ID
+
++ Response 200
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Organization)
+
+### Retrieve Organization Balance [GET /api/1/organizations/{orgid}/balance]
+`GET https://dashboard.hologram.io/api/1/organizations/{orgid}/balance`
+
+Retrieves a specific organization's balance. You must be at least an Admin for the organization to request this information.
+    
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Account Balance)
+
+### Add Balance to Organization [POST /api/1/organizations/{orgid}/balance]
+`POST https://dashboard.hologram.io/api/1/organizations/{orgid}/balance`
+
+Charge to the organization's configured billing source (credit card on file) and add that amount to your account balance. You must be at least an Admin for this organization to add balance.
+
++ Request (application/json)
+
+    + Attributes
+        + addamount: 123.50 (number) - Amount to add to organization's balance
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + order_data (Order Data)
+
+### List Organization's Balance History [GET /api/1/organizations/{orgid}/balancehistory{?id,timestart,timeend,startafter,transactionTypeId,limit}]
+`GET https://dashboard.hologram.io/api/1/organizations/{orgid}/balancehistory`
+
+Returns a list of transactions (both credits and charges) for an organization. You must be an Admin for the organization to request this information.
+
++ Parameters
+    + id: 1 (number, optional) - Get balance history that has the given record ID
+    + timestart: 1480550400 (number, optional) - Only return balance changes that happened after this time (Unix timestamp)
+    + timeend: 1480550400 (number, optional) - Only return balance changes that happened before this time (Unix timestamp)
+    + startafter: 1 (number, optional) - Get balance history whose IDs come after the given ID
+    + transactionTypeId: 1 (number, optional) - Get balance records of the specified type
+    + limit: 200 (number, optional) - Return a maximum of this many balance records.
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + limit: 1 (number) - The query limit 
+        + size: 1 (number) - The number of values returned 
+        + continues: true (boolean) - Only shows when limit is less than size
+        + data (array)
+            + (object)
+                + id: 123432 (number) - Unique transaction identifier
+                + orgid: 001122 (number) - Unique organization identifier
+                + time: `2016-04-26 20:31:42` (string) - Timestamp of transaction
+                + description: Charge to balance: Data Usage (string) - Text description of charge
+                + amount: "$2.13" (string) - Transaction amount
+                + transactiontypeid: "DU" (string) - Transaction type
+                + orderid: 001133 (number) - Associated order ID, returns 0 if no order associated
+                + linkids: [012345] (array) - Link IDs associatd with transaction
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "data": [
+            {
+              "id": 54345
+              "orgid": 477,
+              "orgid":
+              "time": "2016-04-26 20:31:42",
+              "description": "Charge to balance: SIM Renewal for SIM 8944502211130209115",
+              "amount": "-3.95",
+              "transaction_type_id": "SR"
+              "orderid": 0,
+              "linkids": [
+              "012345"
+              ]
+            },
+            {
+              "id": 54345
+              "orgid": 477,
+              "orgid":
+              "time": "2016-04-26 20:31:42",
+              "description": "Charge to balance: SIM Renewal for SIM 8944502211130209115",
+              "amount": "-3.95",
+              "transaction_type_id": "SR"
+              "orderid": 0,
+              "linkids": [
+              "012345"
+              ]
+            }
+          ]
+        }
+
+### Data Structure
+### Device (object)
++ id: 1234 (number) - Unique device identifier or device ID
++ orgid: 321 (number) - ID of the organization that owns the device (may be a personal organization)
++ name: My Device (string) - User-configurable device name
++ type: Unknown (string) - for internal use
++ whencreated: `2019-01-05 01:00:00` (string) - Timestamp when the device record was created
++ phonenumber: +15555551234 (string) - Phone number associated with device. You can purchase a phone number on the Dashboard.
++ phonenumber_cost: 0.00 (string) - Monthly cost of phone number
++ tunnelable: 0 (number) - Indicates if tunneling is enabled for the device
+    See the [guide](https://hologram.io/docs/guide/cloud/spacebridge-tunnel) for details
++ imei: 957520074024080 (string) - Last IMEI seen for this device
++ imei-sv: 9575200740240801 (string) - Last IMEI-SV seen for this device. This is the same as IMEI but instead of check digit has two digits at end for software version.
++ hidden: 0 (number) - For internal Hologram use
++ tags: (array) - User-configurable categories that you can use to classify your devices
+    + object
+        + id: 890 (number)
+        + name: MyTag (string)
++ links
+    + cellular (array) - Information about the device's SIM and data plan
++ lastsession - Information about the device's last data session
+    + linkid: 505816 (number),
+    + bytes: 0 (number),
+    + session_begin: `2019-10-15 17:41:38` (string) - UTC timestamp,
+    + session_end: `0000-00-00 00:00:00` (string) - UTC timestamp. If all 0's, then device is in active session.
+    + imei: 0000000000000000 (string),
+    + cellid:  `4864` (number),
+    + tadig: USAW6 (string),
+    + lac: 31602 (string),
+    + network_name: `T-Mobile USA, Inc` (string),
+    + radio_access_technology: LTE (string),
+    + active: true (boolean) - Indicates if device is in an active data session,
+    + longitude: 78.662 (number),
+    + latitude: 35.788 (number)
++ model: U201 (string) - Model of modem based on IMEI value
++ manufacturer: ublox (string) - Manufacturer of modem based on IMEI value
+
+### Cellular Link (object)
++ id: 4321 (number) - Unique link identifier or link ID
++ deviceid: 1234 (number) - Device ID corresponding to the link
++ devicename: "My Device" (string) - Name of device corresponding to the link
++ orgid: 123 (number) - Organization ID of the organization that owns the link/device
++ tunnelable: 0 (number) - Is tunneling enabled for the link? 1 = true, 0 = false
++ partnerid: 1 (number)
++ sim: 9990000000000001234 (string) - SIM number or ICCID
++ msisdn: 999900001234 (string) - MSISDN corresponding to the link
++ imsi: 123456789876543 (number) - IMSI corresponding to the link
++ dataplansubscriptionid: 75 (number) - Data plan ID
++ zone: 1 (number) - Geographical zone of the data plan
++ carrier: 2 (number) - ID of the carrier that the link last connected to
++ state: LIVE (string) - State of the link. LIVE, PAUSED, DEACTIVATE
++ whenclaimed: `2019-01-05 01:00:00` (string) - UTC timestamp when the SIM was activated
++ whenexpires: `2019-02-05 01:00:00` (string) - UTC timestamp when the current billing period ends or when the data plan was canceled
++ whencreated: `2018-10-04 04:57:17` (string) - UTC timestamp when the link's record was first created
++ overagelimit: 20000 (number) - SIM data limit in Bytes. If there is no limit, `overagelimit` is -1. See the
+    [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits)
+    for details on overage limits.
++ apn: hologram (string) - APN to use when connecting with this SIM card
+
+### Order Data (object)
+
++ preview: false (boolean) - Preview = true, actual transaction = false
++ sku: ACCTREFILL (string) - SKU of order
++ unit_cost: 123.50 (number) - Cost per SKU
++ total_cost: 123.50 (number) - Total cost of order
++ description: Refill Account Balance (string) - Internal order description
++ extra_description: User purchased account refill (string) - Internal order description
++ needs_shipping: false (boolean) - Indicates if the order needs to be shipped
++ shipping_cost: 0 (number) - Cost of shipping
+
+### Data Plan (object)
+
++ id: 127 (number) - Unique identifier for the data plan or plan ID
++ name: 1 MB (string) - Data plan name
++ description (string)
++ data: 1000000 (number) - Monthly data included in the plan in Bytes
++ enabled: 1 (number) - Indicates if the plan is available for new subscriptions. 1 = true, 0 = false
++ developerplan: 0 (number) - Indicates if the plan is a developer plan.
+    This is equivalent to Pilot Plan. Only one Pilot/developer plan allowed per account. There is no monthly fee for the Pilot/developer plan.
++ tiers (object) - Tiers represent automatic scaling plan discounts based on the number of SIMs you have on the plan
+    + TIERNAME (object) - Usually named after the number of devices necessary to enable the scaled pricing level. 
+        + devicecount: 0 (number) - This is the number of devices needed to be on your account
+            in order to hit the given tier's pricing
+        + zones (object) - These are the different coverage zones available for the plan
+            + ZONENAME (object) - ZONENAME could be something like "global" or "1" or "2"
+                + amount: 1.50 (string) - Monthly cost of plan for given zone
+                + sms: 0.19 (string) - Cost of SMS for given zone
+                + overage: 1 (string) - Per Megabyte cost of overage for plan
++ current_tier: TIERNAME (string) - The current tier that the plan is on
++ zones (object) - Zone pricing for the current tier
+    + zone: global (object) - ZONENAME could be something like "global" or "1" or "2"
+        + amount: 1.50 (string) - Monthly cost of plan for given zone
+        + sms: 0.19 (string) - Cost of SMS for given zone
+        + overage: 1 (string) - Per Megabyte cost of overage for plan
+
+### Device Tag (object)
+
++ name: My Tag (string) - User-configurable tag name
++ id: 123 (number) - Unique identifier for the device tag
++ deviceids (array) - Device IDs of devices associated with this tag
+    + 1234 (number)
+    + 1236 (number)
+
+### Tunnel Key (object)
+
++ id: 1234 (number) - Unique identifier for the tunnel
++ userid: 4321 (number) - User ID of the user that the key belongs to
++ disabled: 0 (number) - If the key is enabled, this is 0. Non-zero if the key is disabled
++ public_key: `ssh-rsa AAAAB3Nzaasdf... user@example.com` (string) - Public key
+
+
+### User (object)
+
++ id: 1234 (number) - Unique identifier for the user or user ID
++ email: joe@example.com (string, required) - User's email address
+    This is the address that is used for logging into the Hologram Dashboard.
++ partnerid: 123 (number) For Hologram internal use
++ first: Joe (string) - User's first name
++ last: Schmoe (string) - User's last name
++ role: (string) - Indicates if the user is an admin. Normally empty.
++ registered: `2015-05-30 20:41:28` (string) - UTC timestamp when user was created
++ personal_org: 123 (number) - Org ID of the user's personal organization
++ billingmethod: (string) - 
+### Account Balance (object)
+
++ userid: 1234 (number)
++ orgid: 2345 (number) - Organization ID
++ balance: 96.05 (string) - User balance
++ promobalance: 0.00 (string) - Additional balance from promotions
++ minbalance: 50.00 (string) - Auto reload minimum balance as configured in the dashboard
++ topoffamount: 0.00 (string) - Auto reload amount as configured in the dashboard
++ pendingcharges: 0 (string)
+
+### Organization (object)
+
++ id: 2345 (number) - Unique ID for the organization
++ name: Smart Things LLC (string) - Display name
++ is_personal: false (boolean) - Is this organization a personal organization belonging to a single user?
++ ownerid: 1234 (number) - ID of the user that created the organization
++ users (array) - Members of the organization
++ pending (array) - Users with pending invitations to the organization
+
+### Sim State History (object)
+
++ id: 1234 (number) - Unique state change id
++ timestamp: `2019-10-15 17:41:38` (string) - UTC timestamp
++ linkid: 4321 (number) - Unique link identifier or link ID
++ oldstate: INACTIVE (string) - Original SIM state
++ newstate: LIVE-PENDING (string) - New SIM state
++ reason: USER (string) - Reason for state change
+
+### OrgUser (object)
+
++ id: 1234 (number) - Unique user id
++ email: joe@example.com (string) - Email address of user.
++ first: Joe (string) - First name
++ last: Schmoe (string) - Last name
++ permissions (array) - Which actions the user has permission to perform
+    + billing
+    + activation
+    + changeplan
