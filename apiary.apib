@@ -224,7 +224,7 @@ Returns a list of your devices. The devices are returned sorted by creation date
             + next: /api/1/devices?limit=1&startafter=4 (string) - URL with query string to get the next results
         + data (array)
             + deviceid: (string) - Key is the device id
-            + name: (string) - value is the device name 
+            + name: (string) - value is the device name
 
 ### List All Device Locations [GET /api/1/devices/locations{?orgid,orgids,tagid,tagname,sim,limit,startafter,id,ids,linkid,phone,tunnelable,name,type,withlocation,imei,imei%2Dsv}]
 `GET https://dashboard.hologram.io/api/1/devices`
@@ -688,7 +688,7 @@ Change the plan for the given SIM
     + Attributes
         + linkids (array) SIMs to change the plans for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + planid: 1 (number) - Integer ID of the plan to change to
         + zone: global (string) - The availability zone of the plan
 
@@ -706,7 +706,7 @@ Restrict the amount of data your device can use in a given billing period. Once 
     + Attributes
         + linkids (array) SIMs to change the overage limit for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + limit: 20000 (number) -
             Number of bytes over the plan limit to allow. Set `-1` for no data limit. See the
             [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits) for details.
@@ -726,7 +726,7 @@ Set a threshold for your device before alerts are sent to your dashboard regardi
     + Attributes
         + linkids (array) SIMs to change the overage limit for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + threshold: 20000 (number) -
             Number of bytes before an alert is sent to the dashboard to warn
 
@@ -1592,6 +1592,105 @@ Returns a list of transactions (both credits and charges) for an organization. Y
           ]
         }
 
+## Group Reports
+Get reports about devices and usage for an organization. Times out after a minute which is possible with large time frames
+or organizations with many devices with lots of usage.
+
+### Generate a Billing Report [GET /api/1/reports/billing?{?deviceid,tagids,timestart,timeend}]
+`GET https://dashboard.hologram.io/api/1/reports/billing`
+
+Generate a billing report for the given timeframe
+
++ Request (application/json)
+
+    + Attributes
+        + deviceid: 54321 (number, optional) - Only return billing for the device specified by device ID
+        + tagids: 1,2 (array, optional) - Return billing from devices with specified tag IDs
+        + timestart: 1480550400 (number, optional) - Only return balance changes that happened after this time (Unix timestamp)
+        + timeend: 1480550400 (number, optional) - Only return balance changes that happened before this time (Unix timestamp)
+
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (object)
+            + usageCharges: 0.41 (number) - Charges against data usage
+            + renewalCharges: 0 - (number) - Charges for SIM renewals
+            + activationCharges: 0 - (number) - Charges for activations
+            + totalCharges: 0.41 - (number) - Sum of all charges
+
+### Generate a Device Report [GET /api/1/reports/devices?{?tagids,timestart,timeend}]
+`GET https://dashboard.hologram.io/api/1/reports/devices`
+
+Generate a device report for the given timeframe
+
++ Request (application/json)
+
+    + Attributes
+        + tagids: 1,2 (array, optional) - Return device information with specified tag IDs
+        + timestart: 1480550400 (number, optional) - Return device information after this time (Unix timestamp)
+        + timeend: 1480550400 (number, optional) - Return device information before this time (Unix timestamp)
+
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (object)
+            + total: 1 (number) - Total number of devices
+            + new: 1 (number) - Total number of newly activated devices
+            + preexisting: 0 (number) - Total number of existing devices
+            + using_data: 1 (number) - Total number of devices that have used data during the time period
+            + total_active: 1 (number) - Total number of active devices
+            + total_preflight: 0 (number) - Total number of devices in preflight
+            + total_deactivated: 0 (number) - Total number of deactivated devices
+
+
+### Generate a summary of an Org's devices activity [GET /api/1/reports/summaryactivity?{?tagids,timestart,timeend}]
+`GET https://dashboard.hologram.io/api/1/reports/summaryactivity`
+
+Get a summary of devices during the given time frame
+
++ Request (application/json)
+
+    + Attributes
+        + tagids: 1,2 (array, optional) - Return activity of devices with the specified tag IDs
+        + timestart: 1480550400 (number, optional) - Return activity of devices after this time (Unix timestamp)
+        + timeend: 1480550400 (number, optional) - Return activity of devices before this time (Unix timestamp)
+
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (object)
+            + numdevices_usingdata_last: 0 (number) - Total number of devices using data in the current period
+            + numdevices_usingdata_prev: 0 (number) - Total number of devices using data in the previous period
+            + dataused_last: 0 (number) - Total usage in the current period
+            + dataused_prev: 0 (number) - Total usage in the previous period
+            + averageperdevice_last: 0 (number) - Average usage per device this period
+            + averageperdevice_prev: 0 (number) - Average usage per device in the previous period
+
+### Get the most recent session data [GET /api/1/reports/latestusage?{?tagids,deviceids}]
+`GET https://dashboard.hologram.io/api/1/reports/latestusage`
+
+Get the most recent sessions that match the given parameters
+
++ Request (application/json)
+
+    + Attributes
+        + tagids: 1,2 (array, optional) - Return activity of devices with the specified tag IDs
+        + deviceids 1,2 (array, optional) - Device IDs of devices associated with this tag
+
++ Response 200 (application/json)
+
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array)
+            + (Session)
+
+
 ### Data Structure
 
 ### Device (object)
@@ -1762,4 +1861,19 @@ Returns a list of transactions (both credits and charges) for an organization. Y
     + deactivate
     + org_management
 
+### Session (object)
 
++ session_id: 1188920803 (number) - Unique ID of the session
++ devicename: My Device (string) - Device name
++ deviceid: 1 (number) - Unique ID of the device
++ sim: 9990000000000001234 (string) - SIM number or ICCID
++ starttime: `2020-08-22 05:00:20` (string) - UTC timestamp
++ endtime: `2020-08-22 05:00:25` (string) - UTC timestamp
++ bytes: 1065 (number) - bytes used during this session
++ imeisv: 9575200740240801 (string) - IMEI sv of the device that produced this session
++ radio_access_technology: 3G (string) - The RAT of the device which produced the session
++ network_name: `T-Mobile USA, Inc` (string) - Network the session occured on
++ tags (array)
+    + tag1 (string)
+    + tag2 (string)
++ imei: 957520074024080 (string) - IMEI of the device that produced this session
