@@ -1496,7 +1496,7 @@ Returns all organizations that you are a member of. This includes the personal o
 + Parameters
     + orgid: 4321 (number) - The organization's unique identifier - Org ID
 
-+ Response 200
++ Response 200 (application/json)
     + Attributes
         + success: true (boolean) - Was the request successful?
         + data (Organization)
@@ -1550,12 +1550,12 @@ Returns a list of transactions (both credits and charges) for an organization. Y
         + data (array)
             + (object)
                 + id: 123432 (number) - Unique transaction identifier
-                + orgid: 001122 (number) - Unique organization identifier
+                + orgid: 1122 (number) - Unique organization identifier
                 + time: `2016-04-26 20:31:42` (string) - Timestamp of transaction
                 + description: Charge to balance: Data Usage (string) - Text description of charge
                 + amount: "$2.13" (string) - Transaction amount
                 + transactiontypeid: "DU" (string) - Transaction type
-                + orderid: 001133 (number) - Associated order ID, returns 0 if no order associated
+                + orderid: 1133 (number) - Associated order ID, returns 0 if no order associated
                 + linkids: [012345] (array) - Link IDs associatd with transaction
 
 + Response 200 (application/json)
@@ -1605,14 +1605,15 @@ Returns a list of transactions (both credits and charges) for an organization. Y
 + tunnelable: 0 (number) - Indicates if tunneling is enabled for the device
     See the [guide](https://hologram.io/docs/guide/cloud/spacebridge-tunnel) for details
 + imei: 957520074024080 (string) - Last IMEI seen for this device
-+ imei-sv: 9575200740240801 (string) - Last IMEI-SV seen for this device. This is the same as IMEI but instead of check digit has two digits at end for software version.
++ imei_sv: 9575200740240801 (string) - Last IMEI-SV seen for this device. This is the same as IMEI but instead of check digit has two digits at end for software version.
 + hidden: 0 (number) - For internal Hologram use
-+ tags: (array) - User-configurable categories that you can use to classify your devices
++ tags (array) - User-configurable categories that you can use to classify your devices
     + (object)
         + id: 890 (number)
         + name: MyTag (string)
 + links
     + cellular (array) - Information about the device's SIM and data plan
+        + (Cellular Link)
 + lastsession - Information about the device's last data session
     + linkid: 505816 (number),
     + bytes: 0 (number),
@@ -1710,10 +1711,9 @@ Returns a list of transactions (both credits and charges) for an organization. Y
 + partnerid: 123 (number) For Hologram internal use
 + first: Joe (string) - User's first name
 + last: Schmoe (string) - User's last name
-+ role: (string) - Indicates if the user is an admin. Normally empty.
++ role (string) - Indicates if the user is an admin. Normally empty.
 + registered: `2015-05-30 20:41:28` (string) - UTC timestamp when user was created
 + personal_org: 123 (number) - Org ID of the user's personal organization
-+ billingmethod: (string) -
 
 ### Account Balance (object)
 
@@ -1732,7 +1732,11 @@ Returns a list of transactions (both credits and charges) for an organization. Y
 + is_personal: false (boolean) - Is this organization a personal organization belonging to a single user?
 + ownerid: 1234 (number) - ID of the user that created the organization
 + users (array) - Members of the organization
+    + (OrgUser)
 + pending (array) - Users with pending invitations to the organization
+    + (object)
+        + inviteid: 123 (number) - ID for the pending invite
+        + email: joe@example.com (string) - Email address of user.
 
 ### Sim State History (object)
 
