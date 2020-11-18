@@ -592,18 +592,6 @@ Retrieve a list of your SIM's state changes. This includes activations, Prefligh
         + data (array)
             + (Sim State History)
 
-### Retrieve SIM's Current Usage  [GET /api/1/links/cellular/{linkid}/currentusage]
-
-Retrieve a list of your SIM's current usage.
-+ Parameters
-    + linkid: 54321 (number) - Integer ID of the link to query
-
-
-+ Response 200 (application/json)
-    + Attributes
-        + success: true (boolean) - Was the request successful?
-        + data (number) - The number of bytes used this period
-
 ### Update SIM's Overage Limit [POST /api/1/links/cellular/{linkid}/overagelimit]
 `POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/overagelimit`
 
@@ -1761,5 +1749,3 @@ Returns a list of transactions (both credits and charges) for an organization. Y
     + sbtunnel
     + deactivate
     + org_management
-
-
