@@ -169,7 +169,7 @@ Returns a list of your devices. The devices are returned sorted by creation date
             + (Device)
 
 ### List All Device Names [GET /api/1/devices/names{?orgid,orgids,tagid,tagname,sim,limit,startafter,id,ids,linkid,phone,tunnelable,name,type,withlocation,imei,imei%2Dsv}]
-`GET https://dashboard.hologram.io/api/1/devices`
+`GET https://dashboard.hologram.io/api/1/devices/names`
 
 Returns a list of your devices. The devices are returned sorted by creation date, with the most recent devices appearing first.
 + Parameters
@@ -227,7 +227,7 @@ Returns a list of your devices. The devices are returned sorted by creation date
             + name: (string) - value is the device name 
 
 ### List All Device Locations [GET /api/1/devices/locations{?orgid,orgids,tagid,tagname,sim,limit,startafter,id,ids,linkid,phone,tunnelable,name,type,withlocation,imei,imei%2Dsv}]
-`GET https://dashboard.hologram.io/api/1/devices`
+`GET https://dashboard.hologram.io/api/1/devices/locations`
 
 Returns a list of your devices. The devices are returned sorted by creation date, with the most recent devices appearing first.
 + Parameters
@@ -315,7 +315,7 @@ You can change the device's name displayed on the Dashboard. You can also transf
 Device tags are user-configurable categories that you can use to classify your devices. A device may be linked to more than one tag.
 
 ### List Device Tags [GET /api/1/devices/tags{?orgid,id,deviceids,limit}]
-`GET https://dashboard.hologram.io/api/1/tags`
+`GET https://dashboard.hologram.io/api/1/devices/tags`
 
 Returns all device tags associated with your devices.
 
@@ -368,7 +368,7 @@ Adds a device tag to specified device or devices.
         + data (Device Tag)
 
 ### Remove Tag from Device [POST /api/1/devices/tags/{tagid}/unlink]
-`POST https://dashboard.hologram.io/api/1/devices/{tagid}/unlink`
+`POST https://dashboard.hologram.io/api/1/devices/tags/{tagid}/unlink`
 
 Removes a device tag from specified device or devices.
 
@@ -386,7 +386,7 @@ Removes a device tag from specified device or devices.
         + data (Device Tag)
 
 ### Delete Device Tag [DELETE /api/1/devices/tags/{tagid}]
-`DELETE https://dashboard.hologram.io/api/1/tags/{tagid}`
+`DELETE https://dashboard.hologram.io/api/1/devices/tags/{tagid}`
 
 Deletes a device tag. If the tag is associated with any devices, the tag is removed from those devices.
 + Parameters
