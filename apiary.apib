@@ -1326,7 +1326,8 @@ This endpoint can be used to send a message into the Hologram Data Engine on beh
     + timeend: 1480550400 (number, optional) - Return messages received before this time (Unix timestamp)
     + error: true (boolean, optional) - Return only messages that had an error occur on a matched route
 
-+ Attributes
++ Response 200 (application/json)
+    + Attributes
         + success: true (boolean) - Was the request successful?
         + limit: 1 (number) - The query limit
         + size: 1 (number) - The number of values returned
@@ -1338,52 +1339,21 @@ This endpoint can be used to send a message into the Hologram Data Engine on beh
         + data (array)
             + (object)
                 + id: 123432 (number) - Unique message identifier
-                + logged (string) - Datetime when the message was received
-                    + Sample: 2016-12-04 20:21:00
+                + logged: `2020-12-04 20:21:00` (string) - Datetime when the message was received
+                + expires: `2021-12-04 20:21:00` (string) - Date and time for when the message will be removed from our database. Usually one year after creation. It may be removed later than this, but you should assume it won't be there after the expiration time.
                 + deviceid: 1234 (number) - Device ID that the message originated from
-                + data (string) - Raw message data (base64 encoded) and metadata
-                + record_id (string) - the message's internal UUID
-                    + Sample: 8e274992-cf84-11e5-a67e-bc764e20b516
-                + tags (array) - Topics (formerly called tags) associated with the message
+                + data: `{"source":"somesource","tags":["TestXYZ","TestB"],"data":"dGVzdGRhdGEx"}` (string) - Raw message data (base64 encoded) and metadata
+                + record_id: 8e274992-cf84-11e5-a67e-bc764e20b516 (string) - the message's internal UUID
+                + tags: (array) - Topics (formerly called tags) associated with the message
+                    + TestXYZ
+                    + TestB
+                + matched_rules: (array) - Array of rules that were triggered by this message
+                    + (object)
+                        + ruleid: 3456 (number) - ID of the route/rule that was triggered
+                        + error: false (boolean) - Whether an error occurred on this route
+                        + result_data: (string) - Response that came back for this route
 
-+ Response 200 (application/json)
 
-        {
-          "success": true,
-          "continues": false,
-          "data": [
-            {
-              "id": 14,
-              "logged": "2015-04-09 15:59:59",
-              "deviceid": 77,
-              "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestB\"],\"data\":\"dGVzdGRhdGEx\"}",
-              "record_id": "8e274992-cf84-11e5-a67e-bc764e20b516",
-              "matched_rules": [
-                {
-                  "ruleid": 1234,
-                  "error": false,
-                  "result_data": ""
-                }
-              ],
-              "tags": [
-                "TestB",
-                "TestXYZ"
-              ]
-            },
-            {
-              "id": 13,
-              "logged": "2015-04-08 21:05:42",
-              "deviceid": 1,
-              "data": "{\"source\":\"somesource\",\"tags\":[\"TestXYZ\",\"TestD\"],\"data\":\"dGVzdGRhdGEx\"}",
-              "record_id": "8e2748e7-cf84-11e5-a67e-bc764e20b516",
-              "matched_rules": []
-              "tags": [
-                "TestD",
-                "TestXYZ"
-              ]
-            }
-          ]
-        }
 
 ## Group Device Tunneling
 Using Spacebridge, you can create secure, authenticated tunnels to send inbound data to a device to any port.
