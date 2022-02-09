@@ -497,12 +497,16 @@ Activating a SIM creates a new device and corresponding cellular link.
                 + link: 3214 (number) - Link ID: ID of the new cellular link
                 + sim: 99990000000012345678 (string)
 
-### Retrieve a Cellular Link [GET /api/1/links/cellular/{linkid}]
+### Retrieve a Cellular Link [GET /api/1/links/cellular/{linkid}?{witheuicc}]
 `GET https://dashboard.hologram.io/api/1/links/cellular/{linkid}`
 
 Retrieves the details of an existing cellular link. You need only supply the unique link identifier (link ID), which you can find on the Dashboard or in the response of a /devices request.
 + Parameters
     + linkid: 54321 (number) - Return the SIM with the given link ID
+
++ Request (application/json)
+    + Attributes
+        + witheuicc: 1 (number) - include the EUICC information for the SIM
 
 + Response 200 (application/json)
     + Attributes
