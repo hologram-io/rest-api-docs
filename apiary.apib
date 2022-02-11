@@ -418,6 +418,9 @@ Activating a SIM creates a new device and corresponding cellular link.
         + zone: global (string) - The default value is 'global'. Reference /plans endpoint for valid zones available with each plan.
         + orgid: 100 (number) - Specify the organization to activate the plan on. Your API key must have activation role privileges on the target organization
         + tagid: 1 (number, optional) - Add a tag specified by the tag ID
+        + overage_limit: 100000 (number, optional) - Amount of overage to consume before pausing, -1 for unlimited (default)
+        + threshold: 100000 (number, optional) - Amount of data to consume before alerting, should be less than overage, -1 for unlimited (default)
+        + smslimit: 10 (number, optional) - Amount of SMS to consume before pausing, -1 for unlimited (default)
 
 + Response 200 (application/json)
     + Attributes
@@ -449,6 +452,9 @@ Activating SIMs creates new devices and corresponding cellular links.
         + zone: global (string) - The default value is 'global'. Reference /plans endpoint for valid zones available with each plan.
         + orgid: 100 (number) - Specify the organization to activate the plan on. Your API key must have activation role privileges on the target organization
         + tagid: 1 (number, optional) - Add a tag specified by the tag ID
+        + overage_limit: 100000 (number, optional) - Amount of overage to consume before pausing, -1 for unlimited (default)
+        + threshold: 100000 (number, optional) - Amount of data to consume before alerting, should be less than overage, -1 for unlimited (default)
+        + smslimit: 10 (number, optional) - Amount of SMS to consume before pausing, -1 for unlimited (default)
 
 + Response 200 (application/json)
     + Attributes
@@ -478,6 +484,9 @@ Activating a SIM creates a new device and corresponding cellular link.
         + zone: global (string) - The default value is 'global'. Reference /plans endpoint for valid zones available with each plan.
         + orgid: 100 (number) - Specify the organization to activate the plan on. Your API key must have activation role privileges on the target organization
         + tagid: 1 (number, optional) - Add a tag specified by the tag ID
+        + overage_limit: 100000 (number, optional) - Amount of overage to consume before pausing, -1 for unlimited (default)
+        + threshold: 100000 (number, optional) - Amount of data to consume before alerting, should be less than overage, -1 for unlimited (default)
+        + smslimit: 10 (number, optional) - Amount of SMS to consume before pausing, -1 for unlimited (default)
 
 + Response 200 (application/json)
     + Attributes
@@ -488,12 +497,16 @@ Activating a SIM creates a new device and corresponding cellular link.
                 + link: 3214 (number) - Link ID: ID of the new cellular link
                 + sim: 99990000000012345678 (string)
 
-### Retrieve a Cellular Link [GET /api/1/links/cellular/{linkid}]
+### Retrieve a Cellular Link [GET /api/1/links/cellular/{linkid}?{witheuicc}]
 `GET https://dashboard.hologram.io/api/1/links/cellular/{linkid}`
 
 Retrieves the details of an existing cellular link. You need only supply the unique link identifier (link ID), which you can find on the Dashboard or in the response of a /devices request.
 + Parameters
     + linkid: 54321 (number) - Return the SIM with the given link ID
+
++ Request (application/json)
+    + Attributes
+        + witheuicc: 1 (number) - include the EUICC information for the SIM
 
 + Response 200 (application/json)
     + Attributes
@@ -592,8 +605,8 @@ Retrieve a list of your SIM's state changes. This includes activations, Prefligh
         + data (array)
             + (Sim State History)
 
-### Update SIM's Overage Limit [POST /api/1/links/cellular/{linkid}/overagelimit]
-`POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/overagelimit`
+### Update SIM's Overage Limit [POST /api/1/links/cellular/{linkid}/limit/overage]
+`POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/limit/overage`
 
 Restrict the amount of data your device can use in a given billing period. Once your device reaches the data limit, the SIM will automatically pause. In order to unpause your device, you will need to increase the data limit.
 
@@ -605,6 +618,42 @@ Restrict the amount of data your device can use in a given billing period. Once 
         + limit: 20000 (number) -
             Number of bytes over the plan limit to allow. Set `-1` for no data limit. See the
             [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits) for details.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Cellular Link)
+
+### Update SIM's Data Threshold [POST /api/1/links/cellular/{linkid}/threshold]
+`POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/threshold`
+
+Set a threshold for your device before alerts are sent to your dashboard regarding usage
+
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to change
+
++ Request (application/json)
+    + Attributes
+        + limit: 20000 (number) -
+            Number of bytes over the plan limit to allow. Set `-1` for no data limit. See the
+            [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits) for details.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Cellular Link)
+
+### Update SIM's SMS Limit [POST /api/1/links/cellular/{linkid}/limit/sms]
+`POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/limit/sms`
+
+Restrict the amount of SMS your device can use in a given billing period. Once your device reaches the SMS limit, the SIM will automatically pause. In order to unpause your device, you will need to increase the SMS limit.
+
++ Parameters
+    + linkid: 54321 (number) - Integer ID of the link to change
+
++ Request (application/json)
+    + Attributes
+        + limit: 10 (number) - Number of SMS to allow. Set `-1` for no SMS limit.
 
 + Response 200 (application/json)
     + Attributes
@@ -623,6 +672,9 @@ Change the plan for the given SIM
     + Attributes
         + planid: 1 (number) - Integer ID of the plan to change to
         + zone: global (string) - The availability zone of the plan
+        + overage_limit: 100000 (number, optional) - Amount of overage to consume before pausing, -1 for unlimited (default)
+        + threshold: 100000 (number, optional) - Amount of data to consume before alerting, should be less than overage, -1 for unlimited (default)
+        + smslimit: 10 (number, optional) - Amount of SMS to consume before pausing, -1 for unlimited (default)
 
 + Response 200 (application/json)
     + Attributes
@@ -642,27 +694,12 @@ Update the data threshold or overage limit of your device.
         + datathreshold: 500 (number) - New data threshold in bytes
         + overagelimit: 500 (number) - Number of bytes over the plan limit to allow. Set `-1` for no data limit. See the
             [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits) for details
+        + smslimit: 10 (number, optional) - Amount of SMS to consume before pausing, -1 for unlimited (default)
 
 + Response 200 (application/json)
     + Attributes
-        + id: 4321 (number) - Unique link identifier or link ID
-        + deviceid: 1234 (number) - Device ID corresponding to the link
-        + devicename: `My Device` (string) - Name of device corresponding to the link
-        + orgid: 123 (number) - Organization ID of the organization that owns the link/device
-        + tunnelable: 0 (number) - Is tunneling enabled for the link? 1 = true, 0 = false
-        + partnerid: 1 (number)
-        + sim: 9990000000000001234 (string) - SIM number or ICCID
-        + msisdn: 999900001234 (string) - MSISDN corresponding to the link
-        + imsi: 123456789876543 (number) - IMSI corresponding to the link
-        + dataplansubscriptionid: 75 (number) - Data plan ID
-        + zone: 1 (number) - Geographical zone of the data plan
-        + carrier: 2 (number) - ID of the carrier that the link last connected to
-        + state: LIVE (string) - State of the link. LIVE, PAUSED, DEACTIVATE
-        + whenclaimed: `2019-01-05 01:00:00` (string) - UTC timestamp when the SIM was activated
-        + whenexpires: `2019-02-05 01:00:00` (string) - UTC timestamp when the current billing period ends or when the data plan was canceled
-        + whencreated: `2018-10-04 04:57:17` (string) - UTC timestamp when the link's record was first created
-        + overagelimit: 500 (number) - SIM data limit in Bytes. If there is no limit, `overagelimit` is -1. See the
-        + apn: hologram (string) - APN to use when connecting with this SIM card
+        + success: true (boolean) - Was the request successful?
+        + data (Cellular Link)
 
 ## Group Bulk Cellular Links
 Operations to perform on multiple SIMs
@@ -679,14 +716,17 @@ Change the plan for the given SIM
             + 2 (number) 
         + planid: 1 (number) - Integer ID of the plan to change to
         + zone: global (string) - The availability zone of the plan
+        + overage_limit: 100000 (number, optional) - Amount of overage to consume before pausing, -1 for unlimited (default)
+        + threshold: 100000 (number, optional) - Amount of data to consume before alerting, should be less than overage, -1 for unlimited (default)
+        + smslimit: 10 (number, optional) - Amount of SMS to consume before pausing, -1 for unlimited (default)
 
 + Response 200 (application/json)
     + Attributes
         + success: true (boolean) - Was the request successful?
         + data (array) - The order information
 
-### Update Overage Limit [POST /api/1/links/cellular/overagelimit]
-`POST https://dashboard.hologram.io/api/1/links/cellular/overagelimit`
+### Update Overage Limit [POST /api/1/links/cellular/limit/overage]
+`POST https://dashboard.hologram.io/api/1/links/cellular/limit/overage`
 
 Restrict the amount of data your device can use in a given billing period. Once your device reaches the data limit, the SIM will automatically pause. In order to unpause your device, you will need to increase the data limit.
 
@@ -724,6 +764,25 @@ Set a threshold for your device before alerts are sent to your dashboard regardi
         + data (array) - Updated SIMs
             + (Cellular Link)
 
+### Update SMS Limit [POST /api/1/links/cellular/limit/sms]
+`POST https://dashboard.hologram.io/api/1/links/cellular/limit/sms`
+
+Restrict the amount of SMS your device can use in a given billing period. Once your device reaches the SMS limit, the SIM will automatically pause. In order to unpause your device, you will need to increase the SMS limit.
+
++ Request (application/json)
+    + Attributes
+        + linkids (array) SIMs to change the overage limit for
+            + 1 (number)
+            + 2 (number) 
+        + limit: 10 (number) - Number of SMS to allow. Set `-1` for no SMS limit.
+
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array) - Updated SIMs
+            + (Cellular Link)
+
 ## Group Alerts - Closed Beta
 The `alerts` endpoints return alert information related to usage data or device status.
 
@@ -735,12 +794,9 @@ List all alerts.
 Returns all alerts for a given organization, organized by deviceid.
 
 + Parameters
-    + orgid: 1234 (number, optional)
-        Only return alerts that are usable for the given organization ID
-    + limit: 20 (string, optional)
-        Return a maximum of this many alerts.
-    + startafter: 1 (number, optional)
-        Return the alerts whose IDs come after the given ID
+    + orgid: 1234 (number, optional) - Only return alerts that are usable for the given organization ID
+    + limit: 20 (string, optional) - Return a maximum of this many alerts.
+    + startafter: 1 (number, optional) - Return the alerts whose IDs come after the given ID
 
 + Response 200 (application/json)
     + Attributes
@@ -1571,7 +1627,7 @@ Returns a list of transactions (both credits and charges) for an organization. Y
         + name: MyTag (string)
 + links
     + cellular (array) - Information about the device's SIM and data plan
-        + (Cellular Link)
+        + (Device Link)
 + lastsession - Information about the device's last data session
     + linkid: 505816 (number),
     + bytes: 0 (number),
@@ -1589,6 +1645,41 @@ Returns a list of transactions (both credits and charges) for an organization. Y
 + model: U201 (string) - Model of modem based on IMEI value
 + manufacturer: ublox (string) - Manufacturer of modem based on IMEI value
 
+### Device Link (object)
++ id: 4321 (number) - Unique link identifier or link ID
++ sim: 9990000000000001234 (string) - SIM number or ICCID
++ imsi: 123456789876543 (number) - IMSI corresponding to the link
++ msisdn: 999900001234 (string) - MSISDN corresponding to the link
++ carrierid: 2 (number) - ID of the carrier that the link last connected to
++ state: LIVE (string) - State of the link. LIVE, PAUSED, DEAD
++ whenclaimed: `2019-01-05 01:00:00` (string) - UTC timestamp when the SIM was activated
++ whenexpires: `2019-02-05 01:00:00` (string) - UTC timestamp when the current billing period ends or when the data plan was canceled
++ overagelimit: 20000 (number) - SIM data limit in Bytes. If there is no limit, `overagelimit` is -1. See the
+    [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits)
+    for details on overage limits.
++ datathreshold: 0 (number) - Threshold before an usage alarm triggers
++ smslimit: 0 (number) - SIM SMS limit. If there is no limit, `smslimit` is -1.
++ pin: `12345` (string) - SIM pin number
++ puk: `12345` (string) - SIM puk number
++ euicc_type: `UICC` (string) - Type of SIM, UICC, BOOTSTRAP, or OPERATIONAL
++ eid: null (string) - The EUICCid, only available on BOOTSTRAP EUICC SIMs
++ euicc_state: `ENABLED` (string) - The current state of the EUICC profile, DOWNLOADED, ENABLED, DISABLED
++ profile_state: `ENABLED` (string) - Alias to the `euicc_state`
++ apn: hologram (string) - APN to use when connecting with this SIM card
++ plan (object) - Information about the plan the link is on
+    + id: 127 (number) - Unique identifier for the data plan or plan ID
+    + zone: 1 (number) - Geographical zone of the data plan
+    + name: `Pay-as-you-go` (string) - Data plan name
+    + data: 1000000 (number) - Monthly data included in the plan in Bytes
+    + cost: 1.50 (string) - Monthly cost of plan for given zone
+    + sms: 0.19 (string) - Cost of SMS for given zone
+    + overage: 1 (string) - Per Megabyte cost of overage for plan
+    + account_tier: BASE (string) - The current account tier for the link
++ last_network_used: `T-Mobile USA, Inc` (string) - Last network hologram recieved network information on
++ last_connect_time: `2022-02-09 19:39:43` (string) - Last completed network session
++ cur_billing_data_used: 2692964 (number) - Usage amount for the current billing period
++ last_billing_data_used: 5421465 (number) - Usage amount for the previous billing period
+
 ### Cellular Link (object)
 + id: 4321 (number) - Unique link identifier or link ID
 + deviceid: 1234 (number) - Device ID corresponding to the link
@@ -1597,12 +1688,13 @@ Returns a list of transactions (both credits and charges) for an organization. Y
 + tunnelable: 0 (number) - Is tunneling enabled for the link? 1 = true, 0 = false
 + partnerid: 1 (number)
 + sim: 9990000000000001234 (string) - SIM number or ICCID
++ sim_attribute: `STANDARD` (string) - Standard or Industrial 
 + msisdn: 999900001234 (string) - MSISDN corresponding to the link
 + imsi: 123456789876543 (number) - IMSI corresponding to the link
 + dataplansubscriptionid: 75 (number) - Data plan ID
 + zone: 1 (number) - Geographical zone of the data plan
 + carrier: 2 (number) - ID of the carrier that the link last connected to
-+ state: LIVE (string) - State of the link. LIVE, PAUSED, DEACTIVATE
++ state: LIVE (string) - State of the link. LIVE, PAUSED, DEAD
 + whenclaimed: `2019-01-05 01:00:00` (string) - UTC timestamp when the SIM was activated
 + whenexpires: `2019-02-05 01:00:00` (string) - UTC timestamp when the current billing period ends or when the data plan was canceled
 + whencreated: `2018-10-04 04:57:17` (string) - UTC timestamp when the link's record was first created
@@ -1610,6 +1702,15 @@ Returns a list of transactions (both credits and charges) for an organization. Y
     [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits)
     for details on overage limits.
 + datathreshold: 0 (number) - Threshold before an usage alarm triggers
++ smslimit: 0 (number) - SIM SMS limit. If there is no limit, `smslimit` is -1.
++ mfa_available: 1 (number) - If the sim can be used to generate OTPs using the hologram SDK
++ pin: `12345` (string) - SIM pin number
++ puk: `12345` (string) - SIM puk number
++ priv_ip_address: `8.8.8.8` (string) - SIMs private IP address, used for spacebridge 
++ euicc_type: `UICC` (string) - Type of SIM, UICC, BOOTSTRAP, or OPERATIONAL
++ eid: null (string) - The EUICCid, only available on BOOTSTRAP EUICC SIMs
++ euicc_state: `ENABLED` (string) - The current state of the EUICC profile, DOWNLOADED, ENABLED, DISABLED
++ profile_state: `ENABLED` (string) - Alias to the `euicc_state`
 + apn: hologram (string) - APN to use when connecting with this SIM card
 
 ### Order Data (object)
@@ -1645,6 +1746,9 @@ Returns a list of transactions (both credits and charges) for an organization. Y
                 + amount: 1.50 (string) - Monthly cost of plan for given zone
                 + sms: 0.19 (string) - Cost of SMS for given zone
                 + overage: 1 (string) - Per Megabyte cost of overage for plan
+                + carriers (object) - Carriers the plan is available on
+                    + CARRIERID (object) - The carrier id and related carrier data
+                        + apn: `hologram` (string) - The APN to set for this carrier
 
 ### Device Tag (object)
 
@@ -1695,6 +1799,7 @@ Returns a list of transactions (both credits and charges) for an organization. Y
     + (object)
         + inviteid: 123 (number) - ID for the pending invite
         + email: joe@example.com (string) - Email address of user.
++ ccemails: `orgcc@email.com` (string) - Comma separated emails for any hologram emails to be sent to
 
 ### Sim State History (object)
 
