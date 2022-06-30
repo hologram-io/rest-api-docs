@@ -166,49 +166,17 @@ Returns a list of your devices. The devices are returned sorted by creation date
         + data (array)
             + (Device)
 
-### List All Device Names [GET /api/1/devices/names{?orgid,orgids,tagid,tagname,sim,limit,startafter,id,ids,linkid,phone,tunnelable,name,type,withlocation,imei,imei%2Dsv}]
+### List All Device Names [GET /api/1/devices/names{?orgid,limit,startafter}]
 `GET https://dashboard.hologram.io/api/1/devices/names`
 
 Returns a list of your devices. The devices are returned sorted by creation date, with the most recent devices appearing first.
 + Parameters
     + orgid: 1234 (number, optional)
         Only return results for the given organization ID
-    + orgids: 1,2,3,4 (array, optional)
-        Only return results for the given organization IDs
-    + tagid: 45 (number, optional)
-        Only return devices with the given tag ID
-    + tagname: sensors (string, optional)
-        Only return devices with the given tag name
-    + sim: 999000000123 (string, optional)
-        Show device with specific SIM number
     + limit: 20 (string, optional)
         Return a maximum of this many devices
     + startafter: 1 (number, optional)
         Return the devices whose IDs come after the given device ID
-    + id: 1 (number, optional)
-        Return the device with the given device ID
-    + ids: 1,2,3 (array, optional)
-        Return any device ids that match those given in the array
-    + linkid: 1 (number, optional)
-        Return the device with the given Link ID
-    + phone: +55555555555 (string, optional)
-        Return the device with the given phone number
-    + tunnelable: true (boolean, optional)
-        Return the devices that are/n't tunnelable through Spacebridge
-    + name: my device (string, optional)
-        Return the device with the given name
-    + type: tracker (string, optional)
-        Return devices with the given type name
-    + withlocation: true (boolean, optional)
-        Include location data on all devices where we have enough information to determine that. Requires professional plan.
-    + imei: 957520074024080 (string, optional)
-        Filter for devices that had the given IMEI on their last session. This searches for
-        standard IMEI which should match what is on the label for the device.
-    + imei%2Dsv: 9575200740240801 (string, optional)
-        Filter for devices that had the given IMEI-SV on their last session. This searches for
-        IMEI-SV which is the normal IMEI but instead of a check digit at the end it has a two
-        digit software version. This is what the network usually sees.
-
 
 + Response 200 (application/json)
     + Attributes
