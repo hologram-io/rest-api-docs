@@ -270,6 +270,7 @@ You can change the device's name displayed on the Dashboard. You can also transf
         + name: Device123 (string) - Update name of the device
         + orgid: 100 (number) - Move device between organizations. Your API key must be at least an
             Admin on both organizations for this to succeed
+        + tunnelable: true (boolean) - Update whether the device is tunnelable or not
 
 + Response 200 (application/json)
     + Attributes
@@ -1381,6 +1382,8 @@ This endpoint can be used to send a message into the Hologram Data Engine on beh
 Using Spacebridge, you can create secure, authenticated tunnels to send inbound data to a device to any port.
 
 You must enable tunneling for your device using the Dashboard. More information about Spacebridge can be found [here](https://hologram.io/docs/guide/cloud/spacebridge-tunnel/).
+You can also enable tunneling for your device using the `PUT /devices/{deviceId}` endpoint.
+
 
 ### Create a Public Key [POST /api/1/tunnelkeys]
 `POST https://dashboard.hologram.io/api/1/tunnelkeys`
