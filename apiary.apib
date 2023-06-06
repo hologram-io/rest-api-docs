@@ -277,6 +277,90 @@ You can change the device's name displayed on the Dashboard. You can also transf
         + success: true (boolean) - Was the request successful?
         + data (Device)
 
+### Pause or Unpause Device Data [POST /api/1/devices/{deviceid}/state]
+
+`POST https://dashboard.hologram.io/api/1/devices/{deviceid}/state`
+
+Pause or unpause device data on all of a devices SIM profiles. Pausing the device will prevent your device from passing any data on all SIM profiles. Paused devices still incur any applicable monthly reactivation fees.
+
++ Parameters
+    + deviceid: 1234 (number) - Change device state with the given device ID
+
++ Request (application/json)
+    + Attributes
+        + state: pause (string) - New device state to set. Either `pause` or `live`.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (Device)
+
+### Change device plans [POST /api/1/devices/{deviceid}/changeplan]
+`POST https://dashboard.hologram.io/api/1/devices/{deviceid}/changeplan`
+
+Change the plan for the given device. This changes the plan for all SIM profiles on a device
+
++ Parameters
+    + deviceid: 1234 (number) - Change device plan with the given device ID
+
++ Request (application/json)
+    + Attributes
+        + planid: 1 (number) - Integer ID of the plan to change to
+        + zone: global (string) - The availability zone of the plan
+        + orgid: 45 (number) - Integer ID of the org this plan
+        + overage_limit: 100000 (number, optional) - Amount of overage to consume before pausing, -1 for unlimited (default)
+        + threshold: 100000 (number, optional) - Amount of data to consume before alerting, should be less than overage, -1 for unlimited (default)
+        + smslimit: 10 (number, optional) - Amount of SMS to consume before pausing, -1 for unlimited (default)
+        + useacctbalance: true (boolean) - Use the current account balance for this plan
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array) - The order information
+
+## Group Bulk Devices
+Operations to perform on multiple devices.
+
+### Bulk Change plans [POST /api/1/devices/changeplan]
+`POST https://dashboard.hologram.io/api/1/devices/changeplan`
+
+Change the plan for the given devices
+
++ Request (application/json)
+    + Attributes
+        + deviceids (array) Devices to change the plans for
+            + 1 (number)
+            + 2 (number) 
+        + planid: 1 (number) - Integer ID of the plan to change to
+        + zone: global (string) - The availability zone of the plan
+        + orgid: 45 (number) - Integer ID of the org this plan
+        + overage_limit: 100000 (number, optional) - Amount of overage to consume before pausing, -1 for unlimited (default)
+        + threshold: 100000 (number, optional) - Amount of data to consume before alerting, should be less than overage, -1 for unlimited (default)
+        + smslimit: 10 (number, optional) - Amount of SMS to consume before pausing, -1 for unlimited (default)
+        + useacctbalance: true (boolean) - Use the current account balance for this plan
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array) - Summary of change plan result
+
+### Bulk Pause or Unpause Device Data  [POST /api/1/devices/state]
+`POST https://dashboard.hologram.io/api/1/devices/state`
+
+Pause or unpause device data on all of a devices SIM profiles. Pausing the device will prevent your device from passing any data on all SIM profiles. Paused devices still incur any applicable monthly reactivation fees.
+
++ Request (application/json)
+    + Attributes
+        + deviceids (array) Devices to pause or unpause data for
+            + 1 (number)
+            + 2 (number) 
+        + state: pause (string) - New device state to set. Either `pause` or `live`.
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean) - Was the request successful?
+        + data (array) - Summary of state change result
+
 ## Group Device Tags
 
 Device tags are user-configurable categories that you can use to classify your devices. A device may be linked to more than one tag.
@@ -538,10 +622,12 @@ Returns a list of your SIM cards. However, we recommend using the /devices endpo
         + data (array)
             + (Cellular Link)
 
-### Pause or Unpause Data [POST /api/1/links/cellular/{linkid}/state]
+### Pause or Unpause Specific Profile Data [POST /api/1/links/cellular/{linkid}/state]
 `POST https://dashboard.hologram.io/api/1/links/cellular/{linkid}/state`
 
-Pause or unpause your SIM. Pausing the SIM will prevent your device from passing any data. Paused SIMs still incur any applicable monthly reactivation fees.
+We recommend using the new [Pause or Unpause Device Data](#reference/devices/pause-or-unpause-device-data/pause-or-unpause-device-data) endpoint for support for both single and multi profile SIMs.
+
+Pause or unpause a specific SIM profile on a device. Pausing the SIM profile will prevent this profile from from passing any data. Paused SIM profiles still incur any applicable monthly reactivation fees.
 
 + Parameters
     + linkid: 54321 (number) - Link ID of the link to modify
