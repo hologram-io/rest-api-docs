@@ -190,7 +190,7 @@ Returns a list of your devices. The devices are returned sorted by creation date
             + next: /api/1/devices?limit=1&startafter=4 (string) - URL with query string to get the next results
         + data (array)
             + deviceid: (string) - Key is the device id
-            + name: (string) - value is the device name 
+            + name: (string) - value is the device name
 
 ### List All Device Locations [GET /api/1/devices/locations{?orgid,orgids,tagid,tagname,sim,limit,startafter,id,ids,linkid,phone,tunnelable,name,type,withlocation,imei,imei%2Dsv}]
 `GET https://dashboard.hologram.io/api/1/devices/locations`
@@ -330,7 +330,7 @@ Change the plan for the given devices
     + Attributes
         + deviceids (array) Devices to change the plans for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + planid: 1 (number) - Integer ID of the plan to change to
         + zone: global (string) - The availability zone of the plan
         + orgid: 45 (number) - Integer ID of the org this plan
@@ -353,7 +353,7 @@ Pause or unpause device data on all of a devices SIM profiles. Pausing the devic
     + Attributes
         + deviceids (array) Devices to pause or unpause data for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + state: pause (string) - New device state to set. Either `pause` or `live`.
 
 + Response 200 (application/json)
@@ -766,7 +766,7 @@ Change the plan for the given SIM
     + Attributes
         + linkids (array) SIMs to change the plans for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + planid: 1 (number) - Integer ID of the plan to change to
         + zone: global (string) - The availability zone of the plan
         + overage_limit: 100000 (number, optional) - Amount of overage to consume before pausing, -1 for unlimited (default)
@@ -787,7 +787,7 @@ Restrict the amount of data your device can use in a given billing period. Once 
     + Attributes
         + linkids (array) SIMs to change the overage limit for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + limit: 20000 (number) -
             Number of bytes over the plan limit to allow. Set `-1` for no data limit. See the
             [guide](https://hologram.io/docs/guide/connect/device-management#data-and-overage-limits) for details.
@@ -807,7 +807,7 @@ Set a threshold for your device before alerts are sent to your dashboard regardi
     + Attributes
         + linkids (array) SIMs to change the overage limit for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + threshold: 20000 (number) -
             Number of bytes before an alert is sent to the dashboard to warn
 
@@ -826,7 +826,7 @@ Restrict the amount of SMS your device can use in a given billing period. Once y
     + Attributes
         + linkids (array) SIMs to change the overage limit for
             + 1 (number)
-            + 2 (number) 
+            + 2 (number)
         + limit: 10 (number) - Number of SMS to allow. Set `-1` for no SMS limit.
 
 
@@ -1363,6 +1363,7 @@ See the [guide](https://hologram.io/docs/guide/cloud/message-to-device/) for det
         + port: 80 (number, required) - Port to use
         + data: Hello world! (string) - Data to send. Max length of 10k bytes. Must send either data or base64data
         + base64data: SGVsbG8gd29ybGQhCg== (string) - The data to send, encoded in base64. Max length of 10k bytes. Must send either data or base64data
+        + waitForResponse: false (boolean, optional) - Specify if target device is expected to respond to UDP messages. Hologram's network will wait for a response if set to true.
 
 + Response 200 (application/json)
     + Attributes
@@ -1395,6 +1396,7 @@ an authentication token. In order to generate a webhook URL, please visit the cl
             + (object)
                 + deviceid: 1234 (number)
                 + messageid: 9a9e55f0-a167-4d9d-972e-b2ad0740d449 (string)
+        + waitForResponse: false (boolean, optional) - Specify if target device is expected to respond to UDP messages. Hologram's network will wait for a response if set to true.
 
 ## Group Data Engine Messages
 Hologram's Data Engine is a message queue and protocol translation layer designed to route data from your embedded devices to other internet-connected services. It features a low-bandwidth ingestion protocol designed for resource-constrained microcontrollers. See the [guide](https://hologram.io/docs/guide/cloud/data-router) for details on sending
@@ -1743,7 +1745,7 @@ Returns a list of transactions (both credits and charges) for an organization. Y
 + tunnelable: 0 (number) - Is tunneling enabled for the link? 1 = true, 0 = false
 + partnerid: 1 (number)
 + sim: 9990000000000001234 (string) - SIM number or ICCID
-+ sim_attribute: `STANDARD` (string) - Standard or Industrial 
++ sim_attribute: `STANDARD` (string) - Standard or Industrial
 + msisdn: 999900001234 (string) - MSISDN corresponding to the link
 + imsi: 123456789876543 (number) - IMSI corresponding to the link
 + dataplansubscriptionid: 75 (number) - Data plan ID
@@ -1761,7 +1763,7 @@ Returns a list of transactions (both credits and charges) for an organization. Y
 + mfa_available: 1 (number) - If the sim can be used to generate OTPs using the hologram SDK
 + pin: `12345` (string) - SIM pin number
 + puk: `12345` (string) - SIM puk number
-+ priv_ip_address: `8.8.8.8` (string) - SIMs private IP address, used for spacebridge 
++ priv_ip_address: `8.8.8.8` (string) - SIMs private IP address, used for spacebridge
 + euicc_type: `UICC` (string) - Type of SIM, UICC, BOOTSTRAP, or OPERATIONAL
 + eid: null (string) - The EUICCid, only available on BOOTSTRAP EUICC SIMs
 + euicc_state: `ENABLED` (string) - The current state of the EUICC profile, DOWNLOADED, ENABLED, DISABLED
